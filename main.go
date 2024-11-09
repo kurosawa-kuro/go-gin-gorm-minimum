@@ -195,9 +195,11 @@ func GetUser(c *gin.Context) {
 // @Accept       multipart/form-data
 // @Produce      json
 // @Security     BearerAuth
-// @Param        avatar formData file true "Avatar image file"
+// @Param        avatar formData file true "Avatar image file (JPG, JPEG, PNG, GIF only)"
 // @Success      200  {object}  models.UserResponse
 // @Failure      400  {object}  map[string]string
+// @Failure      401  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
 // @Router       /users/avatar [put]
 func UpdateAvatar(c *gin.Context) {
 	userID, _ := c.Get("user_id")

@@ -327,7 +327,7 @@ paths:
       - multipart/form-data
       description: Upload and update user avatar image
       parameters:
-      - description: Avatar image file
+      - description: Avatar image file (JPG, JPEG, PNG, GIF only)
         in: formData
         name: avatar
         required: true
@@ -341,6 +341,18 @@ paths:
             $ref: '#/definitions/models.UserResponse'
         "400":
           description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
           schema:
             additionalProperties:
               type: string
