@@ -223,9 +223,10 @@ func UpdateAvatar(c *gin.Context) {
 	// ファイル名を生成（user_id_timestamp.ext）
 	filename := utils.GenerateAvatarFilename(userID.(uint), file.Filename)
 
-	// 保存先のパスを生成
-	avatarPath := filepath.Join("uploads/avatars", filename)
-	fullPath := filepath.Join(".", avatarPath)
+	// 保存先のパスを生成（データベース保存用）
+	avatarPath := filepath.ToSlash(filepath.Join("uploads/avatars", filename))
+	// 実際のファイル保存用のパス
+	fullPath := filepath.Join(".", "uploads", "avatars", filename)
 
 	// ディレクトリが存在することを確認
 	if err := os.MkdirAll(filepath.Dir(fullPath), 0755); err != nil {
@@ -252,6 +253,7 @@ func UpdateAvatar(c *gin.Context) {
 		os.Remove(oldPath)
 	}
 
+	// データベースには常にフォワードスラッシュで保存
 	user.AvatarPath = "/" + avatarPath
 	if err := db.Save(&user).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user"})
