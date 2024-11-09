@@ -1,11 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"time"
 
 	_ "go-gin-gorm-minimum/docs"
+
+	"go-gin-gorm-minimum/middlewares"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
@@ -42,6 +45,10 @@ type Micropost struct {
 // @description     This is a sample server.
 // @host           localhost:8080
 // @BasePath       /
+// @securityDefinitions.apikey Bearer
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT token.
 
 func init() {
 	// データベース接続
@@ -62,10 +69,13 @@ func init() {
 // @Tags         microposts
 // @Accept       json
 // @Produce      json
+// @Security     Bearer
 // @Param        micropost body Micropost true "Micropost object"
 // @Success      201  {object}  Micropost
 // @Router       /api/v1/microposts [post]
 func CreateMicropost(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	fmt.Println("userID:", userID)
 	var micropost Micropost
 	if err := c.ShouldBindJSON(&micropost); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -82,6 +92,7 @@ func CreateMicropost(c *gin.Context) {
 // @Tags         microposts
 // @Accept       json
 // @Produce      json
+// @Security     Bearer
 // @Success      200  {array}   Micropost
 // @Router       /api/v1/microposts [get]
 func GetMicroposts(c *gin.Context) {
@@ -191,7 +202,7 @@ func LoginUser(c *gin.Context) {
 		"exp":   time.Now().Add(time.Hour).Unix(),
 	})
 
-	tokenString, err := token.SignedString([]byte(os.Getenv("SECRET_KEY")))
+	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return
@@ -263,6 +274,7 @@ func main() {
 	v1 := r.Group("/api/v1")
 	{
 		microposts := v1.Group("/microposts")
+		microposts.Use(middlewares.AuthMiddleware())
 		{
 			microposts.POST("", CreateMicropost)
 			microposts.GET("", GetMicroposts)
@@ -270,6 +282,7 @@ func main() {
 		}
 
 		users := v1.Group("/users")
+		users.Use(middlewares.AuthMiddleware())
 		{
 			users.GET("", GetUsers)
 			users.GET("/:id", GetUser)

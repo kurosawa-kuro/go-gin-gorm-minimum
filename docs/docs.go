@@ -85,6 +85,11 @@ const docTemplate = `{
         },
         "/api/v1/microposts": {
             "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "get all microposts",
                 "consumes": [
                     "application/json"
@@ -109,6 +114,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Create a new micropost with the given title",
                 "consumes": [
                     "application/json"
@@ -300,6 +310,14 @@ const docTemplate = `{
                     "example": "user"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "Bearer": {
+            "description": "Type \"Bearer\" followed by a space and JWT token.",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`
