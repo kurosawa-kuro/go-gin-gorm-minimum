@@ -36,14 +36,6 @@ func init() {
 	db.AutoMigrate(&models.Micropost{}, &models.User{})
 }
 
-// Database connection instance
-var dbOps *handlers.DatabaseOperations
-
-// Initialize database connection and migrations
-func init() {
-	dbOps = handlers.NewDatabaseOperations(db)
-}
-
 // Router setup
 type Router struct {
 	auth      *handlers.AuthHandler
