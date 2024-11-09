@@ -5,6 +5,8 @@ go 1.23.2
 require (
 	github.com/gin-gonic/gin v1.10.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
+	github.com/joho/godotenv v1.5.1
+	github.com/stretchr/testify v1.9.0
 	github.com/swaggo/files v1.0.1
 	github.com/swaggo/gin-swagger v1.6.0
 	github.com/swaggo/swag v1.16.4
@@ -14,8 +16,8 @@ require (
 )
 
 require (
-	github.com/joho/godotenv v1.5.1 // indirect
-	github.com/mattn/go-sqlite3 v1.14.22 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 )
 
 require (
@@ -59,5 +61,4 @@ require (
 	golang.org/x/tools v0.27.0 // indirect
 	google.golang.org/protobuf v1.35.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	gorm.io/driver/sqlite v1.5.6
 )
