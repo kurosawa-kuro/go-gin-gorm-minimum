@@ -147,8 +147,6 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/models.LoginResponse'
-      security:
-      - BearerAuth: []
       summary: Login user
       tags:
       - auth
@@ -171,7 +169,6 @@ paths:
               type: string
             type: object
       security:
-      - BearerAuth: []
       - BearerAuth: []
       summary: Get current user
       tags:
@@ -213,7 +210,6 @@ paths:
               $ref: '#/definitions/models.Micropost'
             type: array
       security:
-      - BearerAuth: []
       - BearerAuth: []
       summary: List microposts
       tags:
@@ -267,7 +263,6 @@ paths:
             type: object
       security:
       - BearerAuth: []
-      - BearerAuth: []
       summary: Get micropost by ID
       tags:
       - microposts
@@ -286,7 +281,6 @@ paths:
               $ref: '#/definitions/models.UserResponse'
             type: array
       security:
-      - BearerAuth: []
       - BearerAuth: []
       summary: List users
       tags:
@@ -316,7 +310,6 @@ paths:
               type: string
             type: object
       security:
-      - BearerAuth: []
       - BearerAuth: []
       summary: Get user by ID
       tags:

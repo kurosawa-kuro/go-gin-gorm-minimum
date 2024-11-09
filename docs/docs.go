@@ -17,11 +17,6 @@ const docTemplate = `{
     "paths": {
         "/auth/login": {
             "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
                 "description": "Login user with the given email and password",
                 "consumes": [
                     "application/json"
@@ -57,9 +52,6 @@ const docTemplate = `{
         "/auth/me": {
             "get": {
                 "security": [
-                    {
-                        "BearerAuth": []
-                    },
                     {
                         "BearerAuth": []
                     }
@@ -133,9 +125,6 @@ const docTemplate = `{
                 "security": [
                     {
                         "BearerAuth": []
-                    },
-                    {
-                        "BearerAuth": []
                     }
                 ],
                 "description": "get all microposts",
@@ -204,9 +193,6 @@ const docTemplate = `{
                 "security": [
                     {
                         "BearerAuth": []
-                    },
-                    {
-                        "BearerAuth": []
                     }
                 ],
                 "description": "get micropost by ID",
@@ -251,9 +237,6 @@ const docTemplate = `{
         "/users": {
             "get": {
                 "security": [
-                    {
-                        "BearerAuth": []
-                    },
                     {
                         "BearerAuth": []
                     }
@@ -349,9 +332,6 @@ const docTemplate = `{
         "/users/{id}": {
             "get": {
                 "security": [
-                    {
-                        "BearerAuth": []
-                    },
                     {
                         "BearerAuth": []
                     }

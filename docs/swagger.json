@@ -11,11 +11,6 @@
     "paths": {
         "/auth/login": {
             "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
                 "description": "Login user with the given email and password",
                 "consumes": [
                     "application/json"
@@ -51,9 +46,6 @@
         "/auth/me": {
             "get": {
                 "security": [
-                    {
-                        "BearerAuth": []
-                    },
                     {
                         "BearerAuth": []
                     }
@@ -127,9 +119,6 @@
                 "security": [
                     {
                         "BearerAuth": []
-                    },
-                    {
-                        "BearerAuth": []
                     }
                 ],
                 "description": "get all microposts",
@@ -198,9 +187,6 @@
                 "security": [
                     {
                         "BearerAuth": []
-                    },
-                    {
-                        "BearerAuth": []
                     }
                 ],
                 "description": "get micropost by ID",
@@ -245,9 +231,6 @@
         "/users": {
             "get": {
                 "security": [
-                    {
-                        "BearerAuth": []
-                    },
                     {
                         "BearerAuth": []
                     }
@@ -343,9 +326,6 @@
         "/users/{id}": {
             "get": {
                 "security": [
-                    {
-                        "BearerAuth": []
-                    },
                     {
                         "BearerAuth": []
                     }
