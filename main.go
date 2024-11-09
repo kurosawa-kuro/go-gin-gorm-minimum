@@ -208,6 +208,8 @@ func LoginUser(c *gin.Context) {
 		return
 	}
 
+	fmt.Println("tokenString:Bearer", tokenString)
+
 	// パスワードを除外したレスポンスを作成
 	response := struct {
 		Token      string    `json:"token"`
