@@ -41,6 +41,40 @@ func init() {
 	db.AutoMigrate(&models.Micropost{}, &models.User{})
 }
 
+// Database connection instance
+var dbOps *DatabaseOperations
+
+// Initialize database connection and migrations
+func init() {
+	dbOps = NewDatabaseOperations(db)
+}
+
+// Database Operations
+type DatabaseOperations struct {
+	db *gorm.DB
+}
+
+func NewDatabaseOperations(db *gorm.DB) *DatabaseOperations {
+	return &DatabaseOperations{db: db}
+}
+
+func (ops *DatabaseOperations) FindUserByEmail(email string) (*models.User, error) {
+	var user models.User
+	if err := ops.db.Where("email = ?", email).First(&user).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+// Auth Handler
+type AuthHandler struct {
+	dbOps *DatabaseOperations
+}
+
+func NewAuthHandler(dbOps *DatabaseOperations) *AuthHandler {
+	return &AuthHandler{dbOps: dbOps}
+}
+
 // SignupUser godoc
 // @Summary      Signup user
 // @Description  Signup user with the given information
@@ -50,14 +84,14 @@ func init() {
 // @Param        user body models.User true "User object" default({"email":"user1@example.com","password":"password123","role":"user","avatar_path":"/avatars/default.png"})
 // @Success      201  {object}  models.UserResponse
 // @Router       /auth/signup [post]
-func SignupUser(c *gin.Context) {
+func (h *AuthHandler) SignupUser(c *gin.Context) {
 	var user models.User
 	if err := c.ShouldBindJSON(&user); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if _, err := utils.FindUserByEmail(db, user.Email); err == nil {
+	if _, err := h.dbOps.FindUserByEmail(user.Email); err == nil {
 		c.JSON(http.StatusConflict, gin.H{"error": "Email already exists"})
 		return
 	}
@@ -69,7 +103,7 @@ func SignupUser(c *gin.Context) {
 	}
 	user.Password = hashedPassword
 
-	if err := db.Create(&user).Error; err != nil {
+	if err := h.dbOps.db.Create(&user).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
 		return
 	}
@@ -87,14 +121,14 @@ func SignupUser(c *gin.Context) {
 // @Success      200  {object}  models.LoginResponse
 // @Router       /auth/login [post]
 // @Security BearerAuth
-func LoginUser(c *gin.Context) {
+func (h *AuthHandler) LoginUser(c *gin.Context) {
 	var loginReq models.LoginRequest
 	if err := c.ShouldBindJSON(&loginReq); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	storedUser, err := utils.FindUserByEmail(db, loginReq.Email)
+	storedUser, err := h.dbOps.FindUserByEmail(loginReq.Email)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, utils.ErrInvalidCredentials)
 		return
@@ -105,7 +139,7 @@ func LoginUser(c *gin.Context) {
 		return
 	}
 
-	tokenString, err := utils.GenerateJWTToken(storedUser)
+	tokenString, err := utils.GenerateJWTToken(*storedUser)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return
@@ -128,7 +162,7 @@ func LoginUser(c *gin.Context) {
 // @Failure      401  {object}  map[string]string
 // @Router       /auth/me [get]
 // @Security BearerAuth
-func GetMe(c *gin.Context) {
+func (h *AuthHandler) GetMe(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 	if userID == nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
@@ -136,12 +170,21 @@ func GetMe(c *gin.Context) {
 	}
 
 	var user models.User
-	if err := db.First(&user, userID).Error; err != nil {
+	if err := h.dbOps.db.First(&user, userID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
 
 	c.JSON(http.StatusOK, user.ToResponse())
+}
+
+// User Handler
+type UserHandler struct {
+	dbOps *DatabaseOperations
+}
+
+func NewUserHandler(dbOps *DatabaseOperations) *UserHandler {
+	return &UserHandler{dbOps: dbOps}
 }
 
 // GetUsers godoc
@@ -154,9 +197,9 @@ func GetMe(c *gin.Context) {
 // @Success      200  {array}   models.UserResponse
 // @Router       /users [get]
 // @Security BearerAuth
-func GetUsers(c *gin.Context) {
+func (h *UserHandler) GetUsers(c *gin.Context) {
 	var users []models.User
-	db.Find(&users)
+	h.dbOps.db.Find(&users)
 
 	var response []models.UserResponse
 	for _, user := range users {
@@ -178,9 +221,9 @@ func GetUsers(c *gin.Context) {
 // @Failure      404  {object}  map[string]string
 // @Router       /users/{id} [get]
 // @Security BearerAuth
-func GetUser(c *gin.Context) {
+func (h *UserHandler) GetUser(c *gin.Context) {
 	var user models.User
-	if err := db.First(&user, c.Param("id")).Error; err != nil {
+	if err := h.dbOps.db.First(&user, c.Param("id")).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Record not found!"})
 		return
 	}
@@ -201,7 +244,7 @@ func GetUser(c *gin.Context) {
 // @Failure      401  {object}  map[string]string
 // @Failure      500  {object}  map[string]string
 // @Router       /users/avatar [put]
-func UpdateAvatar(c *gin.Context) {
+func (h *UserHandler) UpdateAvatar(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 	if userID == nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
@@ -242,7 +285,7 @@ func UpdateAvatar(c *gin.Context) {
 
 	// ユーザー情報を更新
 	var user models.User
-	if err := db.First(&user, userID).Error; err != nil {
+	if err := h.dbOps.db.First(&user, userID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
@@ -255,12 +298,21 @@ func UpdateAvatar(c *gin.Context) {
 
 	// データベースには常にフォワードスラッシュで保存
 	user.AvatarPath = "/" + avatarPath
-	if err := db.Save(&user).Error; err != nil {
+	if err := h.dbOps.db.Save(&user).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user"})
 		return
 	}
 
 	c.JSON(http.StatusOK, user.ToResponse())
+}
+
+// Micropost Handler
+type MicropostHandler struct {
+	dbOps *DatabaseOperations
+}
+
+func NewMicropostHandler(dbOps *DatabaseOperations) *MicropostHandler {
+	return &MicropostHandler{dbOps: dbOps}
 }
 
 // CreateMicropost godoc
@@ -273,7 +325,7 @@ func UpdateAvatar(c *gin.Context) {
 // @Param        micropost body models.MicropostRequest true "Micropost object"
 // @Success      201  {object}  models.MicropostResponse
 // @Router       /microposts [post]
-func CreateMicropost(c *gin.Context) {
+func (h *MicropostHandler) CreateMicropost(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 	if userID == nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
@@ -291,13 +343,13 @@ func CreateMicropost(c *gin.Context) {
 		UserID: userID.(uint),
 	}
 
-	if err := db.Create(&micropost).Error; err != nil {
+	if err := h.dbOps.db.Create(&micropost).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create micropost"})
 		return
 	}
 
 	// Load the associated user for the response
-	db.Preload("User").First(&micropost, micropost.ID)
+	h.dbOps.db.Preload("User").First(&micropost, micropost.ID)
 	c.JSON(http.StatusCreated, micropost.ToResponse())
 }
 
@@ -311,9 +363,9 @@ func CreateMicropost(c *gin.Context) {
 // @Success      200  {array}   models.Micropost
 // @Router       /microposts [get]
 // @Security BearerAuth
-func GetMicroposts(c *gin.Context) {
+func (h *MicropostHandler) GetMicroposts(c *gin.Context) {
 	var microposts []models.Micropost
-	db.Preload("User").Find(&microposts)
+	h.dbOps.db.Preload("User").Find(&microposts)
 	c.JSON(http.StatusOK, microposts)
 }
 
@@ -329,9 +381,9 @@ func GetMicroposts(c *gin.Context) {
 // @Failure      404  {object}  map[string]string
 // @Router       /microposts/{id} [get]
 // @Security BearerAuth
-func GetMicropost(c *gin.Context) {
+func (h *MicropostHandler) GetMicropost(c *gin.Context) {
 	var micropost models.Micropost
-	if err := db.First(&micropost, c.Param("id")).Error; err != nil {
+	if err := h.dbOps.db.First(&micropost, c.Param("id")).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Record not found!"})
 		return
 	}
@@ -339,40 +391,57 @@ func GetMicropost(c *gin.Context) {
 	c.JSON(http.StatusOK, micropost)
 }
 
-func main() {
-	r := gin.Default()
-	setupRoutes(r)
-	r.Run(":8080")
+// Router setup
+type Router struct {
+	auth      *AuthHandler
+	user      *UserHandler
+	micropost *MicropostHandler
 }
 
-// setupRoutes configures all the routes for the application
-func setupRoutes(r *gin.Engine) {
+func NewRouter(dbOps *DatabaseOperations) *Router {
+	return &Router{
+		auth:      NewAuthHandler(dbOps),
+		user:      NewUserHandler(dbOps),
+		micropost: NewMicropostHandler(dbOps),
+	}
+}
+
+func (router *Router) Setup(r *gin.Engine) {
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	v1 := r.Group("/api/v1")
 	{
-		setupMicropostRoutes(v1.Group("/microposts"))
-		setupUserRoutes(v1.Group("/users"))
-		setupAuthRoutes(v1.Group("/auth"))
+		router.setupMicropostRoutes(v1.Group("/microposts"))
+		router.setupUserRoutes(v1.Group("/users"))
+		router.setupAuthRoutes(v1.Group("/auth"))
 	}
 }
 
-func setupMicropostRoutes(group *gin.RouterGroup) {
+func (router *Router) setupMicropostRoutes(group *gin.RouterGroup) {
 	group.Use(middlewares.AuthMiddleware())
-	group.POST("", CreateMicropost)
-	group.GET("", GetMicroposts)
-	group.GET("/:id", GetMicropost)
+	group.POST("", router.micropost.CreateMicropost)
+	group.GET("", router.micropost.GetMicroposts)
+	group.GET("/:id", router.micropost.GetMicropost)
 }
 
-func setupUserRoutes(group *gin.RouterGroup) {
+func (router *Router) setupUserRoutes(group *gin.RouterGroup) {
 	group.Use(middlewares.AuthMiddleware())
-	group.GET("", GetUsers)
-	group.GET("/:id", GetUser)
-	group.PUT("/avatar", UpdateAvatar)
+	group.GET("", router.user.GetUsers)
+	group.GET("/:id", router.user.GetUser)
+	group.PUT("/avatar", router.user.UpdateAvatar)
 }
 
-func setupAuthRoutes(group *gin.RouterGroup) {
-	group.POST("/signup", SignupUser)
-	group.POST("/login", LoginUser)
-	group.GET("/me", middlewares.AuthMiddleware(), GetMe)
+func (router *Router) setupAuthRoutes(group *gin.RouterGroup) {
+	group.POST("/signup", router.auth.SignupUser)
+	group.POST("/login", router.auth.LoginUser)
+	group.GET("/me", middlewares.AuthMiddleware(), router.auth.GetMe)
+}
+
+func main() {
+	dbOps := NewDatabaseOperations(db)
+	router := NewRouter(dbOps)
+
+	r := gin.Default()
+	router.Setup(r)
+	r.Run(":8080")
 }
