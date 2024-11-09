@@ -6,13 +6,13 @@ import (
 	"os"
 
 	"gorm.io/driver/postgres"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
 func SetupDB() *gorm.DB {
 	// 環境変数から設定を読み込む
 	config := loadDBConfig()
+	log.Println("config", config)
 
 	var (
 		db  *gorm.DB
@@ -29,8 +29,15 @@ func SetupDB() *gorm.DB {
 		log.Printf("Setup postgresql database for %s", config.Environment)
 
 	case "test":
-		db, err = gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-		log.Println("Setup sqlite database for testing")
+		testConfig := DBConfig{
+			Host:     "localhost",
+			User:     "postgres",
+			Password: "postgres",
+			DBName:   "web_app_db_integration_test_go",
+			Port:     "5432",
+		}
+		db, err = setupPostgres(testConfig)
+		log.Println("Setup postgresql database for testing")
 
 	default:
 		config.Environment = "dev"
