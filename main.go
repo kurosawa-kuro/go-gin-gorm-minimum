@@ -243,7 +243,37 @@ func LoginUser(c *gin.Context) {
 func GetUsers(c *gin.Context) {
 	var users []User
 	db.Find(&users)
-	c.JSON(http.StatusOK, users)
+
+	// パスワードを除外したレスポンス用の構造体スライスを作成
+	var response []struct {
+		ID         uint      `json:"id"`
+		Email      string    `json:"email"`
+		Role       string    `json:"role"`
+		AvatarPath string    `json:"avatar_path"`
+		CreatedAt  time.Time `json:"created_at"`
+		UpdatedAt  time.Time `json:"updated_at"`
+	}
+
+	// 各ユーザーの情報をレスポンス用構造体に変換
+	for _, user := range users {
+		response = append(response, struct {
+			ID         uint      `json:"id"`
+			Email      string    `json:"email"`
+			Role       string    `json:"role"`
+			AvatarPath string    `json:"avatar_path"`
+			CreatedAt  time.Time `json:"created_at"`
+			UpdatedAt  time.Time `json:"updated_at"`
+		}{
+			ID:         user.ID,
+			Email:      user.Email,
+			Role:       user.Role,
+			AvatarPath: user.AvatarPath,
+			CreatedAt:  user.CreatedAt,
+			UpdatedAt:  user.UpdatedAt,
+		})
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 // GetUser godoc
@@ -263,7 +293,24 @@ func GetUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, user)
+	// パスワードを除外したレスポンスを作成
+	response := struct {
+		ID         uint      `json:"id"`
+		Email      string    `json:"email"`
+		Role       string    `json:"role"`
+		AvatarPath string    `json:"avatar_path"`
+		CreatedAt  time.Time `json:"created_at"`
+		UpdatedAt  time.Time `json:"updated_at"`
+	}{
+		ID:         user.ID,
+		Email:      user.Email,
+		Role:       user.Role,
+		AvatarPath: user.AvatarPath,
+		CreatedAt:  user.CreatedAt,
+		UpdatedAt:  user.UpdatedAt,
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 // GetMe godoc
