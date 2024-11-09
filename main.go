@@ -266,6 +266,47 @@ func GetUser(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
+// GetMe godoc
+// @Summary      Get current user
+// @Description  get current user information from token
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Security     Bearer
+// @Success      200  {object}  User
+// @Failure      401  {object}  map[string]string
+// @Router       /api/v1/auth/me [get]
+func GetMe(c *gin.Context) {
+	// ミドルウェアからユーザーIDを取得
+	userID, _ := c.Get("user_id")
+	fmt.Println("userID:", userID)
+
+	var user User
+	if err := db.First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	// パスワードを除外したレスポンスを作成
+	response := struct {
+		ID         uint      `json:"id"`
+		Email      string    `json:"email"`
+		Role       string    `json:"role"`
+		AvatarPath string    `json:"avatar_path"`
+		CreatedAt  time.Time `json:"created_at"`
+		UpdatedAt  time.Time `json:"updated_at"`
+	}{
+		ID:         user.ID,
+		Email:      user.Email,
+		Role:       user.Role,
+		AvatarPath: user.AvatarPath,
+		CreatedAt:  user.CreatedAt,
+		UpdatedAt:  user.UpdatedAt,
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
 func main() {
 	r := gin.Default()
 
@@ -294,6 +335,7 @@ func main() {
 		{
 			auth.POST("/signup", SignupUser)
 			auth.POST("/login", LoginUser)
+			auth.GET("/me", middlewares.AuthMiddleware(), GetMe)
 		}
 	}
 

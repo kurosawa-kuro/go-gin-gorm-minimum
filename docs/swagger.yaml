@@ -64,6 +64,29 @@ paths:
       summary: Login user
       tags:
       - auth
+  /api/v1/auth/me:
+    get:
+      consumes:
+      - application/json
+      description: get current user information from token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.User'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Get current user
+      tags:
+      - auth
   /api/v1/auth/signup:
     post:
       consumes:
