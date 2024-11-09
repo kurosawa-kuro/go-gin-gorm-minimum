@@ -1,0 +1,58 @@
+@baseUrl = http://localhost:8080/api/v1
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InVzZXIxQGV4YW1wbGUuY29tIiwiZXhwIjoxNzMxMTc1MTg1LCJzdWIiOjMzfQ.vshh_2TkIiMeI2LryuI1AQO-0UMKBn07c429i12NOK0
+
+### サインアップ
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+    "email": "user1@example.com",
+    "password": "password123"
+}
+
+### ログイン
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+    "email": "user1@example.com",
+    "password": "password123"
+}
+
+### 自分のプロフィール取得
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{token}}
+
+### ユーザー一覧取得
+GET {{baseUrl}}/users
+Authorization: Bearer {{token}}
+
+### 特定のユーザー取得
+GET {{baseUrl}}/users/1
+Authorization: Bearer {{token}}
+
+### アバター更新
+PUT {{baseUrl}}/users/avatar
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "avatar_url": "https://example.com/avatar.jpg"
+}
+
+### マイクロポスト作成
+POST {{baseUrl}}/microposts
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "title": "これは新しいマイクロポストです"
+}
+
+### マイクロポスト一覧取得
+GET {{baseUrl}}/microposts
+Authorization: Bearer {{token}}
+
+### 特定のマイクロポスト取得
+GET {{baseUrl}}/microposts/1
+Authorization: Bearer {{token}} 
