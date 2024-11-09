@@ -6,17 +6,18 @@ import (
 	"path/filepath"
 
 	"go-gin-gorm-minimum/models"
+	"go-gin-gorm-minimum/services"
 	"go-gin-gorm-minimum/utils"
 
 	"github.com/gin-gonic/gin"
 )
 
 type UserHandler struct {
-	dbOps *DatabaseOperations
+	userService *services.UserService
 }
 
-func NewUserHandler(dbOps *DatabaseOperations) *UserHandler {
-	return &UserHandler{dbOps: dbOps}
+func NewUserHandler(userService *services.UserService) *UserHandler {
+	return &UserHandler{userService: userService}
 }
 
 // GetUsers godoc
@@ -29,14 +30,16 @@ func NewUserHandler(dbOps *DatabaseOperations) *UserHandler {
 // @Success      200  {array}   models.UserResponse
 // @Router       /users [get]
 func (h *UserHandler) GetUsers(c *gin.Context) {
-	var users []models.User
-	h.dbOps.db.Find(&users)
+	users, err := h.userService.FindAll()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch users"})
+		return
+	}
 
 	var response []models.UserResponse
 	for _, user := range users {
 		response = append(response, user.ToResponse())
 	}
-
 	c.JSON(http.StatusOK, response)
 }
 
@@ -52,12 +55,11 @@ func (h *UserHandler) GetUsers(c *gin.Context) {
 // @Failure      404  {object}  map[string]string
 // @Router       /users/{id} [get]
 func (h *UserHandler) GetUser(c *gin.Context) {
-	var user models.User
-	if err := h.dbOps.db.First(&user, c.Param("id")).Error; err != nil {
+	user, err := h.userService.FindByID(c.Param("id"))
+	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Record not found!"})
 		return
 	}
-
 	c.JSON(http.StatusOK, user.ToResponse())
 }
 
@@ -106,22 +108,25 @@ func (h *UserHandler) UpdateAvatar(c *gin.Context) {
 		return
 	}
 
-	var user models.User
-	if err := h.dbOps.db.First(&user, userID).Error; err != nil {
+	// Get current user to check old avatar
+	currentUser, err := h.userService.FindByID(userID)
+	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
 
-	if user.AvatarPath != "/avatars/default.png" {
-		oldPath := filepath.Join(".", user.AvatarPath)
+	// Remove old avatar if it's not the default
+	if currentUser.AvatarPath != "/avatars/default.png" {
+		oldPath := filepath.Join(".", currentUser.AvatarPath)
 		os.Remove(oldPath)
 	}
 
-	user.AvatarPath = "/" + avatarPath
-	if err := h.dbOps.db.Save(&user).Error; err != nil {
+	// Update user avatar
+	updatedUser, err := h.userService.UpdateAvatar(userID.(uint), "/"+avatarPath)
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user"})
 		return
 	}
 
-	c.JSON(http.StatusOK, user.ToResponse())
+	c.JSON(http.StatusOK, updatedUser.ToResponse())
 }

@@ -13,10 +13,9 @@ package main
 import (
 	_ "go-gin-gorm-minimum/docs"
 	"go-gin-gorm-minimum/handlers"
-	_ "go-gin-gorm-minimum/handlers"
 	"go-gin-gorm-minimum/middlewares"
 	"go-gin-gorm-minimum/models"
-	"go-gin-gorm-minimum/utils"
+	"go-gin-gorm-minimum/services"
 
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
@@ -30,7 +29,7 @@ var db *gorm.DB
 // Initialize database connection and migrations
 func init() {
 	var err error
-	db, err = gorm.Open(postgres.Open(utils.DSN), &gorm.Config{})
+	db, err = gorm.Open(postgres.Open("postgresql://postgres:postgres@localhost:5432/web_app_db_integration_go?sslmode=disable"), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
 	}
@@ -53,9 +52,10 @@ type Router struct {
 }
 
 func NewRouter(dbOps *handlers.DatabaseOperations) *Router {
+	userService := services.NewUserService(db)
 	return &Router{
 		auth:      handlers.NewAuthHandler(dbOps),
-		user:      handlers.NewUserHandler(dbOps),
+		user:      handlers.NewUserHandler(userService),
 		micropost: handlers.NewMicropostHandler(dbOps),
 	}
 }
