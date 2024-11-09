@@ -131,7 +131,75 @@ func CreateUser(c *gin.Context) {
 	}
 	user.Password = string(hashedPassword)
 	db.Create(&user)
-	c.JSON(http.StatusCreated, user)
+
+	// レスポンス用の構造体を作成
+	response := struct {
+		ID         uint      `json:"id"`
+		Email      string    `json:"email"`
+		Role       string    `json:"role"`
+		AvatarPath string    `json:"avatar_path"`
+		CreatedAt  time.Time `json:"created_at"`
+		UpdatedAt  time.Time `json:"updated_at"`
+	}{
+		ID:         user.ID,
+		Email:      user.Email,
+		Role:       user.Role,
+		AvatarPath: user.AvatarPath,
+		CreatedAt:  user.CreatedAt,
+		UpdatedAt:  user.UpdatedAt,
+	}
+
+	c.JSON(http.StatusCreated, response)
+}
+
+// Login User
+// @Summary      Login user
+// @Description  Login user with the given email and password
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Param        user body User true "User object"
+// @Success      200  {object}  User
+// @Router       /api/v1/users/login [post]
+func LoginUser(c *gin.Context) {
+	var loginUser User
+	var storedUser User
+
+	if err := c.ShouldBindJSON(&loginUser); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// データベースからユーザーを検索
+	if err := db.Where("email = ?", loginUser.Email).First(&storedUser).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+		return
+	}
+
+	// パスワードの比較
+	if err := bcrypt.CompareHashAndPassword([]byte(storedUser.Password), []byte(loginUser.Password)); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+		return
+	}
+
+	// パスワードを除外したレスポンスを作成
+	response := struct {
+		ID         uint      `json:"id"`
+		Email      string    `json:"email"`
+		Role       string    `json:"role"`
+		AvatarPath string    `json:"avatar_path"`
+		CreatedAt  time.Time `json:"created_at"`
+		UpdatedAt  time.Time `json:"updated_at"`
+	}{
+		ID:         storedUser.ID,
+		Email:      storedUser.Email,
+		Role:       storedUser.Role,
+		AvatarPath: storedUser.AvatarPath,
+		CreatedAt:  storedUser.CreatedAt,
+		UpdatedAt:  storedUser.UpdatedAt,
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 // GetUsers godoc
@@ -187,6 +255,7 @@ func main() {
 		users := v1.Group("/users")
 		{
 			users.POST("", CreateUser)
+			users.POST("/login", LoginUser)
 			users.GET("", GetUsers)
 			users.GET("/:id", GetUser)
 		}

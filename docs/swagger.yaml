@@ -172,4 +172,26 @@ paths:
       summary: Get user by ID
       tags:
       - users
+  /api/v1/users/login:
+    post:
+      consumes:
+      - application/json
+      description: Login user with the given email and password
+      parameters:
+      - description: User object
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/main.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.User'
+      summary: Login user
+      tags:
+      - users
 swagger: "2.0"
