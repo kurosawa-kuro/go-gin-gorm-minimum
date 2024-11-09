@@ -7,6 +7,7 @@ import (
 	"go-gin-gorm-minimum/infra"
 	"go-gin-gorm-minimum/models"
 	"go-gin-gorm-minimum/services"
+	"go-gin-gorm-minimum/testutils"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -14,63 +15,27 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"gorm.io/gorm"
 )
 
-var (
-	db          *gorm.DB
-	authHandler *handlers.AuthHandler
-)
-
-func TestMain(m *testing.M) {
-	// テスト用の環境変数設定
+func init() {
+	// Set test environment and initialize DB before running tests
 	os.Setenv("ENV", "test")
-
-	// テスト用DBのセットアップ
-	db = infra.SetupDB()
-
-	// テスト実行
-	code := m.Run()
-
-	// クリーンアップ
-	sql, err := db.DB()
-	if err == nil {
-		sql.Close()
-	}
-
-	os.Exit(code)
-}
-
-func cleanupDatabase(db *gorm.DB) error {
-	// 外部キー制約を一時的に無効化
-	db.Exec("SET CONSTRAINTS ALL DEFERRED")
-
-	// テーブルのクリーンアップ（順序を考慮）
-	if err := db.Exec("DELETE FROM microposts").Error; err != nil {
-		return err
-	}
-	if err := db.Exec("DELETE FROM users").Error; err != nil {
-		return err
-	}
-
-	// 外部キー制約を再度有効化
-	db.Exec("SET CONSTRAINTS ALL IMMEDIATE")
-	return nil
+	testutils.TestDB = infra.SetupDB()
 }
 
 func setupTest() (*gin.Engine, *handlers.AuthHandler) {
 	// テスト前にDBをクリーン
-	if err := cleanupDatabase(db); err != nil {
+	if err := testutils.CleanupDatabase(testutils.TestDB); err != nil {
 		panic(err)
 	}
 
 	// 必要なサービスの初期化
-	userService := services.NewUserService(db)
-	authService := services.NewAuthService(db)
+	userService := services.NewUserService(testutils.TestDB)
+	authService := services.NewAuthService(testutils.TestDB)
 	authHandler := handlers.NewAuthHandler(authService, userService)
 
 	// Ginルーターの設定
-	gin.SetMode(gin.TestMode) // テストモードに設定
+	gin.SetMode(gin.TestMode)
 	r := gin.Default()
 	return r, authHandler
 }
@@ -143,12 +108,12 @@ func TestLoginUser(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// テスト前にDBをクリーン
-			err := cleanupDatabase(db)
+			err := testutils.CleanupDatabase(testutils.TestDB)
 			assert.NoError(t, err)
 
 			// テストユーザーのセットアップ
 			if tt.setupUser != nil {
-				err := services.NewAuthService(db).SignUp(tt.setupUser)
+				err := services.NewAuthService(testutils.TestDB).SignUp(tt.setupUser)
 				assert.NoError(t, err)
 			}
 
