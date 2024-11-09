@@ -1,0 +1,31 @@
+basePath: /
+definitions:
+  main.HelloResponse:
+    properties:
+      message:
+        example: Hello, World!
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: This is a sample server.
+  title: Gin Swagger Example API
+  version: "1.0"
+paths:
+  /:
+    get:
+      consumes:
+      - application/json
+      description: get hello world message
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.HelloResponse'
+      summary: Hello world endpoint
+      tags:
+      - example
+swagger: "2.0"
