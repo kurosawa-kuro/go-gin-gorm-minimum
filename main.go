@@ -279,7 +279,11 @@ func GetUser(c *gin.Context) {
 func GetMe(c *gin.Context) {
 	// ミドルウェアからユーザーIDを取得
 	userID, _ := c.Get("user_id")
-	fmt.Println("userID:", userID)
+
+	if userID == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
 
 	var user User
 	if err := db.First(&user, userID).Error; err != nil {
