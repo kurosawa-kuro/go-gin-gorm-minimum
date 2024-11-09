@@ -21,6 +21,10 @@ func Migrate() {
 	// マイグレーションの実行
 	fmt.Println("Starting database migration...")
 
+	// 1. まず既存のテーブルをドロップ
+	db.Migrator().DropTable(&models.Micropost{}, &models.User{})
+
+	// 2. テーブルを再作成
 	err = db.AutoMigrate(
 		&models.User{},
 		&models.Micropost{},

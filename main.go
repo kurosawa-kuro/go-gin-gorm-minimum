@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 
 	_ "go-gin-gorm-minimum/docs"
@@ -184,14 +183,24 @@ func GetUser(c *gin.Context) {
 // @Router       /api/v1/microposts [post]
 func CreateMicropost(c *gin.Context) {
 	userID, _ := c.Get("user_id")
-	fmt.Println("userID:", userID)
+	if userID == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
 	var micropost models.Micropost
 	if err := c.ShouldBindJSON(&micropost); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	db.Create(&micropost)
+	// Set the UserID from the authenticated user
+	micropost.UserID = userID.(uint)
+
+	if err := db.Create(&micropost).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create micropost"})
+		return
+	}
 	c.JSON(http.StatusCreated, micropost)
 }
 
@@ -206,7 +215,7 @@ func CreateMicropost(c *gin.Context) {
 // @Router       /api/v1/microposts [get]
 func GetMicroposts(c *gin.Context) {
 	var microposts []models.Micropost
-	db.Find(&microposts)
+	db.Preload("User").Find(&microposts)
 	c.JSON(http.StatusOK, microposts)
 }
 

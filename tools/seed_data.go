@@ -53,10 +53,12 @@ func SeedUsersAndMicroposts(db *gorm.DB, hashedPassword string) {
 		// 各ユーザーのマイクロポストを作成
 		microposts := []models.Micropost{
 			{
-				Title: fmt.Sprintf("First post by %s", user.Email),
+				Title:  fmt.Sprintf("First post by %s", user.Email),
+				UserID: user.ID, // ユーザーIDを設定
 			},
 			{
-				Title: fmt.Sprintf("Second post by %s", user.Email),
+				Title:  fmt.Sprintf("Second post by %s", user.Email),
+				UserID: user.ID, // ユーザーIDを設定
 			},
 		}
 
