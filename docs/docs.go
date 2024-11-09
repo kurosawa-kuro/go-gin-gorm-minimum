@@ -35,7 +35,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/main.User"
+                            "$ref": "#/definitions/models.User"
                         }
                     }
                 ],
@@ -43,7 +43,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/main.LoginResponse"
+                            "$ref": "#/definitions/models.LoginResponse"
                         }
                     }
                 }
@@ -71,7 +71,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/main.UserResponse"
+                            "$ref": "#/definitions/models.UserResponse"
                         }
                     },
                     "401": {
@@ -106,7 +106,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/main.User"
+                            "$ref": "#/definitions/models.User"
                         }
                     }
                 ],
@@ -114,7 +114,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/main.UserResponse"
+                            "$ref": "#/definitions/models.UserResponse"
                         }
                     }
                 }
@@ -144,7 +144,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/main.Micropost"
+                                "$ref": "#/definitions/models.Micropost"
                             }
                         }
                     }
@@ -174,7 +174,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/main.Micropost"
+                            "$ref": "#/definitions/models.Micropost"
                         }
                     }
                 ],
@@ -182,7 +182,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/main.Micropost"
+                            "$ref": "#/definitions/models.Micropost"
                         }
                     }
                 }
@@ -214,7 +214,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/main.Micropost"
+                            "$ref": "#/definitions/models.Micropost"
                         }
                     },
                     "404": {
@@ -253,7 +253,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/main.UserResponse"
+                                "$ref": "#/definitions/models.UserResponse"
                             }
                         }
                     }
@@ -291,7 +291,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/main.UserResponse"
+                            "$ref": "#/definitions/models.UserResponse"
                         }
                     },
                     "404": {
@@ -308,7 +308,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "main.LoginResponse": {
+        "models.LoginResponse": {
             "type": "object",
             "properties": {
                 "avatar_path": {
@@ -341,7 +341,7 @@ const docTemplate = `{
                 }
             }
         },
-        "main.Micropost": {
+        "models.Micropost": {
             "type": "object",
             "required": [
                 "title"
@@ -362,7 +362,7 @@ const docTemplate = `{
                 }
             }
         },
-        "main.User": {
+        "models.User": {
             "type": "object",
             "required": [
                 "email",
@@ -392,7 +392,7 @@ const docTemplate = `{
                 }
             }
         },
-        "main.UserResponse": {
+        "models.UserResponse": {
             "type": "object",
             "properties": {
                 "avatar_path": {

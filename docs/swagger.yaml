@@ -1,6 +1,6 @@
 basePath: /
 definitions:
-  main.LoginResponse:
+  models.LoginResponse:
     properties:
       avatar_path:
         example: /avatars/default.png
@@ -24,7 +24,7 @@ definitions:
         example: "2024-11-09T18:00:00+09:00"
         type: string
     type: object
-  main.Micropost:
+  models.Micropost:
     properties:
       created_at:
         type: string
@@ -38,7 +38,7 @@ definitions:
     required:
     - title
     type: object
-  main.User:
+  models.User:
     properties:
       avatar_path:
         example: /avatars/default.png
@@ -60,7 +60,7 @@ definitions:
     - email
     - password
     type: object
-  main.UserResponse:
+  models.UserResponse:
     properties:
       avatar_path:
         example: /avatars/default.png
@@ -99,14 +99,14 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/main.User'
+          $ref: '#/definitions/models.User'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/main.LoginResponse'
+            $ref: '#/definitions/models.LoginResponse'
       summary: Login user
       tags:
       - auth
@@ -121,7 +121,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/main.UserResponse'
+            $ref: '#/definitions/models.UserResponse'
         "401":
           description: Unauthorized
           schema:
@@ -144,14 +144,14 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/main.User'
+          $ref: '#/definitions/models.User'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/main.UserResponse'
+            $ref: '#/definitions/models.UserResponse'
       summary: Signup user
       tags:
       - auth
@@ -167,7 +167,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/main.Micropost'
+              $ref: '#/definitions/models.Micropost'
             type: array
       security:
       - Bearer: []
@@ -184,14 +184,14 @@ paths:
         name: micropost
         required: true
         schema:
-          $ref: '#/definitions/main.Micropost'
+          $ref: '#/definitions/models.Micropost'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/main.Micropost'
+            $ref: '#/definitions/models.Micropost'
       security:
       - Bearer: []
       summary: Create new micropost
@@ -214,7 +214,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/main.Micropost'
+            $ref: '#/definitions/models.Micropost'
         "404":
           description: Not Found
           schema:
@@ -236,7 +236,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/main.UserResponse'
+              $ref: '#/definitions/models.UserResponse'
             type: array
       security:
       - Bearer: []
@@ -260,7 +260,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/main.UserResponse'
+            $ref: '#/definitions/models.UserResponse'
         "404":
           description: Not Found
           schema:

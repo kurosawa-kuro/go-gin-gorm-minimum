@@ -29,7 +29,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/main.User"
+                            "$ref": "#/definitions/models.User"
                         }
                     }
                 ],
@@ -37,7 +37,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/main.LoginResponse"
+                            "$ref": "#/definitions/models.LoginResponse"
                         }
                     }
                 }
@@ -65,7 +65,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/main.UserResponse"
+                            "$ref": "#/definitions/models.UserResponse"
                         }
                     },
                     "401": {
@@ -100,7 +100,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/main.User"
+                            "$ref": "#/definitions/models.User"
                         }
                     }
                 ],
@@ -108,7 +108,7 @@
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/main.UserResponse"
+                            "$ref": "#/definitions/models.UserResponse"
                         }
                     }
                 }
@@ -138,7 +138,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/main.Micropost"
+                                "$ref": "#/definitions/models.Micropost"
                             }
                         }
                     }
@@ -168,7 +168,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/main.Micropost"
+                            "$ref": "#/definitions/models.Micropost"
                         }
                     }
                 ],
@@ -176,7 +176,7 @@
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/main.Micropost"
+                            "$ref": "#/definitions/models.Micropost"
                         }
                     }
                 }
@@ -208,7 +208,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/main.Micropost"
+                            "$ref": "#/definitions/models.Micropost"
                         }
                     },
                     "404": {
@@ -247,7 +247,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/main.UserResponse"
+                                "$ref": "#/definitions/models.UserResponse"
                             }
                         }
                     }
@@ -285,7 +285,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/main.UserResponse"
+                            "$ref": "#/definitions/models.UserResponse"
                         }
                     },
                     "404": {
@@ -302,7 +302,7 @@
         }
     },
     "definitions": {
-        "main.LoginResponse": {
+        "models.LoginResponse": {
             "type": "object",
             "properties": {
                 "avatar_path": {
@@ -335,7 +335,7 @@
                 }
             }
         },
-        "main.Micropost": {
+        "models.Micropost": {
             "type": "object",
             "required": [
                 "title"
@@ -356,7 +356,7 @@
                 }
             }
         },
-        "main.User": {
+        "models.User": {
             "type": "object",
             "required": [
                 "email",
@@ -386,7 +386,7 @@
                 }
             }
         },
-        "main.UserResponse": {
+        "models.UserResponse": {
             "type": "object",
             "properties": {
                 "avatar_path": {

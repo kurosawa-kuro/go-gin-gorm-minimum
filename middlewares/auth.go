@@ -1,10 +1,10 @@
 package middlewares
 
 import (
-	"fmt"
 	"net/http"
-	"os"
 	"strings"
+
+	"go-gin-gorm-minimum/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
@@ -24,15 +24,10 @@ func AuthMiddleware() gin.HandlerFunc {
 		}
 
 		tokenString := strings.TrimPrefix(header, "Bearer ")
-		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-			}
-			return []byte(os.Getenv("JWT_SECRET")), nil
-		})
-
+		token, err := utils.ParseJWTToken(tokenString)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			c.Abort()
 			return
 		}
 
