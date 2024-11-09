@@ -10,12 +10,12 @@ import (
 
 	"go-gin-gorm-minimum/middlewares"
 	"go-gin-gorm-minimum/models"
+	"go-gin-gorm-minimum/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -119,13 +119,24 @@ func SignupUser(c *gin.Context) {
 		return
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	// メールアドレスの重複チェック
+	var existingUser models.User
+	if err := db.Where("email = ?", user.Email).First(&existingUser).Error; err == nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "Email already exists"})
+		return
+	}
+
+	hashedPassword, err := utils.HashPassword(user.Password)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
 		return
 	}
-	user.Password = string(hashedPassword)
-	db.Create(&user)
+	user.Password = hashedPassword
+
+	if err := db.Create(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+		return
+	}
 
 	c.JSON(http.StatusCreated, user.ToResponse())
 }
@@ -153,7 +164,7 @@ func LoginUser(c *gin.Context) {
 		return
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(storedUser.Password), []byte(loginUser.Password)); err != nil {
+	if err := utils.CheckPassword(storedUser.Password, loginUser.Password); err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
 		return
 	}

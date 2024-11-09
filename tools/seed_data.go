@@ -1,13 +1,12 @@
 package main
 
-// tools\delete_data.go
-
 import (
 	"fmt"
-	"go-gin-gorm-minimum/models"
 	"log"
 
-	"golang.org/x/crypto/bcrypt"
+	"go-gin-gorm-minimum/models"
+	"go-gin-gorm-minimum/utils"
+
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -20,8 +19,8 @@ func SeedData() {
 		log.Fatal("failed to connect database:", err)
 	}
 
-	// ユーザーとマイクロポストのデータを挿入 ユーザーのパスワードは""でハッシュ化して
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
+	// パスワードのハッシュ化
+	hashedPassword, err := utils.HashPassword("password123")
 	if err != nil {
 		log.Fatal("failed to hash password:", err)
 	}
@@ -30,16 +29,16 @@ func SeedData() {
 	fmt.Println("\nAll data inserted successfully")
 }
 
-func SeedUsersAndMicroposts(db *gorm.DB, hashedPassword []byte) {
+func SeedUsersAndMicroposts(db *gorm.DB, hashedPassword string) {
 	// サンプルユーザーの作成
 	users := []models.User{
 		{
 			Email:    "user1@example.com",
-			Password: string(hashedPassword),
+			Password: hashedPassword,
 		},
 		{
 			Email:    "user2@example.com",
-			Password: string(hashedPassword),
+			Password: hashedPassword,
 		},
 	}
 

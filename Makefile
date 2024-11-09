@@ -24,6 +24,6 @@ tidy:
 .PHONY: init
 init: tidy docs
 
-.PHONY: delete-data
-delete-data:
-	go run tools/delete_data.go
+.PHONY: db
+db:
+	go run ./tools
