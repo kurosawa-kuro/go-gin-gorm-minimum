@@ -5,52 +5,10 @@ import (
 	"log"
 	"os"
 
+	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
-
-func SetupDB() *gorm.DB {
-	// 環境変数から設定を読み込む
-	config := loadDBConfig()
-	log.Println("config", config)
-
-	var (
-		db  *gorm.DB
-		err error
-	)
-
-	switch config.Environment {
-	case "prod":
-		db, err = setupPostgres(config)
-		log.Printf("Setup postgresql database for %s", config.Environment)
-
-	case "dev":
-		db, err = setupPostgres(config)
-		log.Printf("Setup postgresql database for %s", config.Environment)
-
-	case "test":
-		testConfig := DBConfig{
-			Host:     "localhost",
-			User:     "postgres",
-			Password: "postgres",
-			DBName:   "web_app_db_integration_test_go",
-			Port:     "5432",
-		}
-		db, err = setupPostgres(testConfig)
-		log.Println("Setup postgresql database for testing")
-
-	default:
-		config.Environment = "dev"
-		db, err = setupPostgres(config)
-		log.Println("Setup postgresql database for development (default)")
-	}
-
-	if err != nil {
-		panic(fmt.Sprintf("Failed to connect database: %v", err))
-	}
-
-	return db
-}
 
 type DBConfig struct {
 	Environment string
@@ -61,9 +19,25 @@ type DBConfig struct {
 	Port        string
 }
 
+func SetupDB() *gorm.DB {
+	config := loadDBConfig()
+	log.Printf("★★★ Database Config ★★★ Environment=%s, Host=%s, DBName=%s",
+		config.Environment, config.Host, config.DBName)
+
+	db, err := setupPostgres(config)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to connect database: %v", err))
+	}
+
+	return db
+}
+
 func loadDBConfig() DBConfig {
+	env := getEnvOrDefault("ENV", "dev")
+	loadEnvFile(env)
+
 	return DBConfig{
-		Environment: getEnvOrDefault("ENV", "dev"),
+		Environment: env,
 		Host:        getEnvOrDefault("DB_HOST", "localhost"),
 		User:        getEnvOrDefault("DB_USER", "postgres"),
 		Password:    getEnvOrDefault("DB_PASSWORD", "postgres"),
@@ -72,14 +46,17 @@ func loadDBConfig() DBConfig {
 	}
 }
 
+func loadEnvFile(env string) {
+	envFile := fmt.Sprintf(".env.%s", env)
+	if err := godotenv.Load(envFile); err != nil {
+		log.Printf("Warning: Error loading %s file: %v", envFile, err)
+	}
+}
+
 func setupPostgres(config DBConfig) (*gorm.DB, error) {
 	dsn := fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Tokyo",
-		config.Host,
-		config.User,
-		config.Password,
-		config.DBName,
-		config.Port,
+		config.Host, config.User, config.Password, config.DBName, config.Port,
 	)
 	return gorm.Open(postgres.Open(dsn), &gorm.Config{})
 }

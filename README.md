@@ -8,3 +8,6 @@ Todo
 
 
 $env:ENV="dev"; go run main.go
+
+func loadDBConfig() DBConfig {
+	// この時点でどの環境変数かで調整する必要がある
