@@ -24,6 +24,6 @@ tidy:
 .PHONY: init
 init: tidy docs
 
-.PHONY: delete-users
-delete-users:
-	go run tools/delete_users.go
+.PHONY: delete-data
+delete-data:
+	go run tools/delete_data.go

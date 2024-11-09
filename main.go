@@ -9,6 +9,7 @@ import (
 	_ "go-gin-gorm-minimum/docs"
 
 	"go-gin-gorm-minimum/middlewares"
+	"go-gin-gorm-minimum/models"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
@@ -20,53 +21,6 @@ import (
 )
 
 var db *gorm.DB
-
-// User モデル定義
-type User struct {
-	ID         uint      `json:"id" gorm:"primaryKey" example:"1"`
-	Email      string    `json:"email" gorm:"uniqueIndex;not null" binding:"required,email" example:"user1@example.com"`
-	Password   string    `json:"password" gorm:"not null" binding:"required,min=6" example:"password123"`
-	Role       string    `json:"role" gorm:"default:'user'" example:"user"`
-	AvatarPath string    `json:"avatar_path" example:"/avatars/default.png"`
-	CreatedAt  time.Time `json:"-" gorm:"default:CURRENT_TIMESTAMP"`
-	UpdatedAt  time.Time `json:"-" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
-}
-
-// Micropost モデル定義
-type Micropost struct {
-	ID        uint      `json:"id" gorm:"primaryKey"`
-	Title     string    `json:"title" binding:"required" example:"マイクロポストのタイトル"`
-	CreatedAt time.Time `json:"created_at" gorm:"default:CURRENT_TIMESTAMP"`
-	UpdatedAt time.Time `json:"updated_at" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
-}
-
-// UserResponse は、パスワードを除外したユーザー情報のレスポンス構造体
-type UserResponse struct {
-	ID         uint      `json:"id" example:"1"`
-	Email      string    `json:"email" example:"user1@example.com"`
-	Role       string    `json:"role" example:"user"`
-	AvatarPath string    `json:"avatar_path" example:"/avatars/default.png"`
-	CreatedAt  time.Time `json:"created_at" example:"2024-11-09T18:00:00+09:00"`
-	UpdatedAt  time.Time `json:"updated_at" example:"2024-11-09T18:00:00+09:00"`
-}
-
-// LoginResponse は、ログイン時のレスポンス構造体
-type LoginResponse struct {
-	Token string `json:"token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
-	UserResponse
-}
-
-// ToResponse は User モデルを UserResponse に変換するヘルパー関数
-func (u *User) ToResponse() UserResponse {
-	return UserResponse{
-		ID:         u.ID,
-		Email:      u.Email,
-		Role:       u.Role,
-		AvatarPath: u.AvatarPath,
-		CreatedAt:  u.CreatedAt,
-		UpdatedAt:  u.UpdatedAt,
-	}
-}
 
 // @title           API
 // @version         1.0
@@ -88,7 +42,7 @@ func init() {
 	}
 
 	// マイグレーション
-	db.AutoMigrate(&Micropost{}, &User{}) // User モデルを追加
+	db.AutoMigrate(&models.Micropost{}, &models.User{})
 }
 
 // CreateMicropost godoc
@@ -98,13 +52,13 @@ func init() {
 // @Accept       json
 // @Produce      json
 // @Security     Bearer
-// @Param        micropost body Micropost true "Micropost object"
-// @Success      201  {object}  Micropost
+// @Param        micropost body models.Micropost true "Micropost object"
+// @Success      201  {object}  models.Micropost
 // @Router       /api/v1/microposts [post]
 func CreateMicropost(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 	fmt.Println("userID:", userID)
-	var micropost Micropost
+	var micropost models.Micropost
 	if err := c.ShouldBindJSON(&micropost); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -121,10 +75,10 @@ func CreateMicropost(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Security     Bearer
-// @Success      200  {array}   Micropost
+// @Success      200  {array}   models.Micropost
 // @Router       /api/v1/microposts [get]
 func GetMicroposts(c *gin.Context) {
-	var microposts []Micropost
+	var microposts []models.Micropost
 	db.Find(&microposts)
 	c.JSON(http.StatusOK, microposts)
 }
@@ -136,11 +90,11 @@ func GetMicroposts(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Param        id   path      int  true  "Micropost ID"
-// @Success      200  {object}  Micropost
+// @Success      200  {object}  models.Micropost
 // @Failure      404  {object}  map[string]string
 // @Router       /api/v1/microposts/{id} [get]
 func GetMicropost(c *gin.Context) {
-	var micropost Micropost
+	var micropost models.Micropost
 	if err := db.First(&micropost, c.Param("id")).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Record not found!"})
 		return
@@ -155,11 +109,11 @@ func GetMicropost(c *gin.Context) {
 // @Tags         auth
 // @Accept       json
 // @Produce      json
-// @Param        user body User true "User object" default({"email":"user1@example.com","password":"password123","role":"user","avatar_path":"/avatars/default.png"})
-// @Success      201  {object}  UserResponse
+// @Param        user body models.User true "User object" default({"email":"user1@example.com","password":"password123","role":"user","avatar_path":"/avatars/default.png"})
+// @Success      201  {object}  models.UserResponse
 // @Router       /api/v1/auth/signup [post]
 func SignupUser(c *gin.Context) {
-	var user User
+	var user models.User
 	if err := c.ShouldBindJSON(&user); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -182,12 +136,12 @@ func SignupUser(c *gin.Context) {
 // @Tags         auth
 // @Accept       json
 // @Produce      json
-// @Param        user body User true "User object" default({"email":"user1@example.com","password":"password123"})
-// @Success      200  {object}  LoginResponse
+// @Param        user body models.User true "User object" default({"email":"user1@example.com","password":"password123"})
+// @Success      200  {object}  models.LoginResponse
 // @Router       /api/v1/auth/login [post]
 func LoginUser(c *gin.Context) {
-	var loginUser User
-	var storedUser User
+	var loginUser models.User
+	var storedUser models.User
 
 	if err := c.ShouldBindJSON(&loginUser); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -218,7 +172,7 @@ func LoginUser(c *gin.Context) {
 
 	fmt.Println("tokenString:Bearer", tokenString)
 
-	response := LoginResponse{
+	response := models.LoginResponse{
 		Token:        tokenString,
 		UserResponse: storedUser.ToResponse(),
 	}
@@ -233,13 +187,13 @@ func LoginUser(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Security     Bearer
-// @Success      200  {array}   UserResponse
+// @Success      200  {array}   models.UserResponse
 // @Router       /api/v1/users [get]
 func GetUsers(c *gin.Context) {
-	var users []User
+	var users []models.User
 	db.Find(&users)
 
-	var response []UserResponse
+	var response []models.UserResponse
 	for _, user := range users {
 		response = append(response, user.ToResponse())
 	}
@@ -255,11 +209,11 @@ func GetUsers(c *gin.Context) {
 // @Produce      json
 // @Security     Bearer
 // @Param        id   path      int  true  "User ID"
-// @Success      200  {object}  UserResponse
+// @Success      200  {object}  models.UserResponse
 // @Failure      404  {object}  map[string]string
 // @Router       /api/v1/users/{id} [get]
 func GetUser(c *gin.Context) {
-	var user User
+	var user models.User
 	if err := db.First(&user, c.Param("id")).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Record not found!"})
 		return
@@ -275,7 +229,7 @@ func GetUser(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Security     Bearer
-// @Success      200  {object}  UserResponse
+// @Success      200  {object}  models.UserResponse
 // @Failure      401  {object}  map[string]string
 // @Router       /api/v1/auth/me [get]
 func GetMe(c *gin.Context) {
@@ -285,7 +239,7 @@ func GetMe(c *gin.Context) {
 		return
 	}
 
-	var user User
+	var user models.User
 	if err := db.First(&user, userID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
