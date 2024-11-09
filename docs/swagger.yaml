@@ -73,8 +73,6 @@ definitions:
         type: string
       user:
         $ref: '#/definitions/models.UserResponse'
-      user_id:
-        type: integer
     type: object
   models.User:
     properties:

@@ -437,9 +437,6 @@ const docTemplate = `{
                 },
                 "user": {
                     "$ref": "#/definitions/models.UserResponse"
-                },
-                "user_id": {
-                    "type": "integer"
                 }
             }
         },

@@ -21,7 +21,6 @@ type Micropost struct {
 type MicropostResponse struct {
 	ID        uint         `json:"id"`
 	Title     string       `json:"title"`
-	UserID    uint         `json:"user_id"`
 	User      UserResponse `json:"user"`
 	CreatedAt time.Time    `json:"created_at"`
 	UpdatedAt time.Time    `json:"updated_at"`
@@ -32,7 +31,6 @@ func (m *Micropost) ToResponse() MicropostResponse {
 	return MicropostResponse{
 		ID:        m.ID,
 		Title:     m.Title,
-		UserID:    m.UserID,
 		User:      m.User.ToResponse(),
 		CreatedAt: m.CreatedAt,
 		UpdatedAt: m.UpdatedAt,
