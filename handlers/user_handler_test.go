@@ -46,7 +46,12 @@ func setupUserTest() (*gin.Engine, *handlers.UserHandler) {
 }
 
 func TestGetUsers(t *testing.T) {
-	r, _ := setupUserTest()
+	r, userHandler := testutils.SetupUserHandler()
+
+	// ルートの設定
+	auth := r.Group("/")
+	auth.Use(middlewares.AuthMiddleware())
+	auth.GET("/users", userHandler.GetUsers)
 
 	// テストユーザーを作成
 	authService := services.NewAuthService(testutils.TestDB)

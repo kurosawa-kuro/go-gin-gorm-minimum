@@ -8,14 +8,12 @@ import (
 	"go-gin-gorm-minimum/models"
 	"go-gin-gorm-minimum/services"
 	"go-gin-gorm-minimum/testutils"
-	"go-gin-gorm-minimum/utils"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"go-gin-gorm-minimum/middlewares"
 
-	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 )
@@ -26,45 +24,11 @@ var (
 	authService      *services.AuthService
 )
 
-func setupMicropostTest() (*gin.Engine, *handlers.MicropostHandler) {
-	if err := testutils.CleanupDatabase(testutils.TestDB); err != nil {
-		panic(err)
-	}
-
-	micropostService := services.NewMicropostService(testutils.TestDB)
-	micropostHandler = handlers.NewMicropostHandler(micropostService)
-	authService = services.NewAuthService(testutils.TestDB)
-
-	gin.SetMode(gin.TestMode)
-	r := gin.Default()
-
-	// JWT middleware setup
-
-	return r, micropostHandler
-}
-
-func createTestUser() (*models.User, string, error) {
-	user := &models.User{
-		Email:    "test@example.com",
-		Password: "password123",
-	}
-
-	if err := authService.SignUp(user); err != nil {
-		return nil, "", err
-	}
-
-	token, err := utils.GenerateJWTToken(*user)
-	if err != nil {
-		return nil, "", err
-	}
-
-	return user, token, nil
-}
-
 func TestCreateMicropost(t *testing.T) {
-	r, handler := setupMicropostTest()
-	authMiddleware := middlewares.AuthMiddleware()
-	r.POST("/microposts", authMiddleware, handler.CreateMicropost)
+	r, handler, _ := testutils.SetupMicropostHandler()
+
+	// ルートの設定
+	r.POST("/microposts", middlewares.AuthMiddleware(), handler.CreateMicropost)
 
 	tests := []struct {
 		name           string
@@ -126,7 +90,7 @@ func TestCreateMicropost(t *testing.T) {
 
 			var token string
 			if tt.setupAuth {
-				_, token, err = createTestUser()
+				_, token, err = testutils.CreateTestUser()
 				assert.NoError(t, err)
 			}
 
