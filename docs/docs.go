@@ -231,6 +231,11 @@ const docTemplate = `{
         },
         "/api/v1/users": {
             "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "get all users",
                 "consumes": [
                     "application/json"
@@ -257,6 +262,11 @@ const docTemplate = `{
         },
         "/api/v1/users/{id}": {
             "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "get user by ID",
                 "consumes": [
                     "application/json"

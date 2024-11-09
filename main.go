@@ -238,6 +238,7 @@ func LoginUser(c *gin.Context) {
 // @Tags         users
 // @Accept       json
 // @Produce      json
+// @Security     Bearer
 // @Success      200  {array}   User
 // @Router       /api/v1/users [get]
 func GetUsers(c *gin.Context) {
@@ -282,6 +283,7 @@ func GetUsers(c *gin.Context) {
 // @Tags         users
 // @Accept       json
 // @Produce      json
+// @Security     Bearer
 // @Param        id   path      int  true  "User ID"
 // @Success      200  {object}  User
 // @Failure      404  {object}  map[string]string

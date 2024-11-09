@@ -192,6 +192,8 @@ paths:
             items:
               $ref: '#/definitions/main.User'
             type: array
+      security:
+      - Bearer: []
       summary: List users
       tags:
       - users
@@ -219,6 +221,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - Bearer: []
       summary: Get user by ID
       tags:
       - users
