@@ -23,21 +23,49 @@ var db *gorm.DB
 
 // User モデル定義
 type User struct {
-	ID         uint      `json:"id" gorm:"primaryKey"`
-	Email      string    `json:"email" gorm:"uniqueIndex;not null" binding:"required,email" example:"user@example.com"`
+	ID         uint      `json:"id" gorm:"primaryKey" example:"1"`
+	Email      string    `json:"email" gorm:"uniqueIndex;not null" binding:"required,email" example:"user1@example.com"`
 	Password   string    `json:"password" gorm:"not null" binding:"required,min=6" example:"password123"`
 	Role       string    `json:"role" gorm:"default:'user'" example:"user"`
 	AvatarPath string    `json:"avatar_path" example:"/avatars/default.png"`
-	CreatedAt  time.Time `json:"-" gorm:"autoCreateTime"`
-	UpdatedAt  time.Time `json:"-" gorm:"autoUpdateTime"`
+	CreatedAt  time.Time `json:"-" gorm:"default:CURRENT_TIMESTAMP"`
+	UpdatedAt  time.Time `json:"-" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
 }
 
 // Micropost モデル定義
 type Micropost struct {
 	ID        uint      `json:"id" gorm:"primaryKey"`
 	Title     string    `json:"title" binding:"required" example:"マイクロポストのタイトル"`
-	CreatedAt time.Time `json:"created_at" gorm:"autoCreateTime"`
-	UpdatedAt time.Time `json:"updated_at" gorm:"autoUpdateTime"`
+	CreatedAt time.Time `json:"created_at" gorm:"default:CURRENT_TIMESTAMP"`
+	UpdatedAt time.Time `json:"updated_at" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
+}
+
+// UserResponse は、パスワードを除外したユーザー情報のレスポンス構造体
+type UserResponse struct {
+	ID         uint      `json:"id" example:"1"`
+	Email      string    `json:"email" example:"user1@example.com"`
+	Role       string    `json:"role" example:"user"`
+	AvatarPath string    `json:"avatar_path" example:"/avatars/default.png"`
+	CreatedAt  time.Time `json:"created_at" example:"2024-11-09T18:00:00+09:00"`
+	UpdatedAt  time.Time `json:"updated_at" example:"2024-11-09T18:00:00+09:00"`
+}
+
+// LoginResponse は、ログイン時のレスポンス構造体
+type LoginResponse struct {
+	Token string `json:"token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
+	UserResponse
+}
+
+// ToResponse は User モデルを UserResponse に変換するヘルパー関数
+func (u *User) ToResponse() UserResponse {
+	return UserResponse{
+		ID:         u.ID,
+		Email:      u.Email,
+		Role:       u.Role,
+		AvatarPath: u.AvatarPath,
+		CreatedAt:  u.CreatedAt,
+		UpdatedAt:  u.UpdatedAt,
+	}
 }
 
 // @title           API
@@ -127,8 +155,8 @@ func GetMicropost(c *gin.Context) {
 // @Tags         auth
 // @Accept       json
 // @Produce      json
-// @Param        user body User true "User object"
-// @Success      201  {object}  User
+// @Param        user body User true "User object" default({"email":"user1@example.com","password":"password123","role":"user","avatar_path":"/avatars/default.png"})
+// @Success      201  {object}  UserResponse
 // @Router       /api/v1/auth/signup [post]
 func SignupUser(c *gin.Context) {
 	var user User
@@ -145,24 +173,7 @@ func SignupUser(c *gin.Context) {
 	user.Password = string(hashedPassword)
 	db.Create(&user)
 
-	// レスポンス用の構造体を作成
-	response := struct {
-		ID         uint      `json:"id"`
-		Email      string    `json:"email"`
-		Role       string    `json:"role"`
-		AvatarPath string    `json:"avatar_path"`
-		CreatedAt  time.Time `json:"created_at"`
-		UpdatedAt  time.Time `json:"updated_at"`
-	}{
-		ID:         user.ID,
-		Email:      user.Email,
-		Role:       user.Role,
-		AvatarPath: user.AvatarPath,
-		CreatedAt:  user.CreatedAt,
-		UpdatedAt:  user.UpdatedAt,
-	}
-
-	c.JSON(http.StatusCreated, response)
+	c.JSON(http.StatusCreated, user.ToResponse())
 }
 
 // LoginUser godoc
@@ -171,8 +182,8 @@ func SignupUser(c *gin.Context) {
 // @Tags         auth
 // @Accept       json
 // @Produce      json
-// @Param        user body User true "User object"
-// @Success      200  {object}  User
+// @Param        user body User true "User object" default({"email":"user1@example.com","password":"password123"})
+// @Success      200  {object}  LoginResponse
 // @Router       /api/v1/auth/login [post]
 func LoginUser(c *gin.Context) {
 	var loginUser User
@@ -183,19 +194,16 @@ func LoginUser(c *gin.Context) {
 		return
 	}
 
-	// データベースからユーザーを検索
 	if err := db.Where("email = ?", loginUser.Email).First(&storedUser).Error; err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
 		return
 	}
 
-	// パスワードの比較
 	if err := bcrypt.CompareHashAndPassword([]byte(storedUser.Password), []byte(loginUser.Password)); err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
 		return
 	}
 
-	// token関連
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub":   storedUser.ID,
 		"email": storedUser.Email,
@@ -210,23 +218,9 @@ func LoginUser(c *gin.Context) {
 
 	fmt.Println("tokenString:Bearer", tokenString)
 
-	// パスワードを除外したレスポンスを作成
-	response := struct {
-		Token      string    `json:"token"`
-		ID         uint      `json:"id"`
-		Email      string    `json:"email"`
-		Role       string    `json:"role"`
-		AvatarPath string    `json:"avatar_path"`
-		CreatedAt  time.Time `json:"created_at"`
-		UpdatedAt  time.Time `json:"updated_at"`
-	}{
-		Token:      tokenString,
-		ID:         storedUser.ID,
-		Email:      storedUser.Email,
-		Role:       storedUser.Role,
-		AvatarPath: storedUser.AvatarPath,
-		CreatedAt:  storedUser.CreatedAt,
-		UpdatedAt:  storedUser.UpdatedAt,
+	response := LoginResponse{
+		Token:        tokenString,
+		UserResponse: storedUser.ToResponse(),
 	}
 
 	c.JSON(http.StatusOK, response)
@@ -239,39 +233,15 @@ func LoginUser(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Security     Bearer
-// @Success      200  {array}   User
+// @Success      200  {array}   UserResponse
 // @Router       /api/v1/users [get]
 func GetUsers(c *gin.Context) {
 	var users []User
 	db.Find(&users)
 
-	// パスワードを除外したレスポンス用の構造体スライスを作成
-	var response []struct {
-		ID         uint      `json:"id"`
-		Email      string    `json:"email"`
-		Role       string    `json:"role"`
-		AvatarPath string    `json:"avatar_path"`
-		CreatedAt  time.Time `json:"created_at"`
-		UpdatedAt  time.Time `json:"updated_at"`
-	}
-
-	// 各ユーザーの情報をレスポンス用構造体に変換
+	var response []UserResponse
 	for _, user := range users {
-		response = append(response, struct {
-			ID         uint      `json:"id"`
-			Email      string    `json:"email"`
-			Role       string    `json:"role"`
-			AvatarPath string    `json:"avatar_path"`
-			CreatedAt  time.Time `json:"created_at"`
-			UpdatedAt  time.Time `json:"updated_at"`
-		}{
-			ID:         user.ID,
-			Email:      user.Email,
-			Role:       user.Role,
-			AvatarPath: user.AvatarPath,
-			CreatedAt:  user.CreatedAt,
-			UpdatedAt:  user.UpdatedAt,
-		})
+		response = append(response, user.ToResponse())
 	}
 
 	c.JSON(http.StatusOK, response)
@@ -285,7 +255,7 @@ func GetUsers(c *gin.Context) {
 // @Produce      json
 // @Security     Bearer
 // @Param        id   path      int  true  "User ID"
-// @Success      200  {object}  User
+// @Success      200  {object}  UserResponse
 // @Failure      404  {object}  map[string]string
 // @Router       /api/v1/users/{id} [get]
 func GetUser(c *gin.Context) {
@@ -295,24 +265,7 @@ func GetUser(c *gin.Context) {
 		return
 	}
 
-	// パスワードを除外したレスポンスを作成
-	response := struct {
-		ID         uint      `json:"id"`
-		Email      string    `json:"email"`
-		Role       string    `json:"role"`
-		AvatarPath string    `json:"avatar_path"`
-		CreatedAt  time.Time `json:"created_at"`
-		UpdatedAt  time.Time `json:"updated_at"`
-	}{
-		ID:         user.ID,
-		Email:      user.Email,
-		Role:       user.Role,
-		AvatarPath: user.AvatarPath,
-		CreatedAt:  user.CreatedAt,
-		UpdatedAt:  user.UpdatedAt,
-	}
-
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, user.ToResponse())
 }
 
 // GetMe godoc
@@ -322,13 +275,11 @@ func GetUser(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Security     Bearer
-// @Success      200  {object}  User
+// @Success      200  {object}  UserResponse
 // @Failure      401  {object}  map[string]string
 // @Router       /api/v1/auth/me [get]
 func GetMe(c *gin.Context) {
-	// ミドルウェアからユーザーIDを取得
 	userID, _ := c.Get("user_id")
-
 	if userID == nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
@@ -340,24 +291,7 @@ func GetMe(c *gin.Context) {
 		return
 	}
 
-	// パスワードを除外したレスポンスを作成
-	response := struct {
-		ID         uint      `json:"id"`
-		Email      string    `json:"email"`
-		Role       string    `json:"role"`
-		AvatarPath string    `json:"avatar_path"`
-		CreatedAt  time.Time `json:"created_at"`
-		UpdatedAt  time.Time `json:"updated_at"`
-	}{
-		ID:         user.ID,
-		Email:      user.Email,
-		Role:       user.Role,
-		AvatarPath: user.AvatarPath,
-		CreatedAt:  user.CreatedAt,
-		UpdatedAt:  user.UpdatedAt,
-	}
-
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, user.ToResponse())
 }
 
 func main() {

@@ -1,5 +1,29 @@
 basePath: /
 definitions:
+  main.LoginResponse:
+    properties:
+      avatar_path:
+        example: /avatars/default.png
+        type: string
+      created_at:
+        example: "2024-11-09T18:00:00+09:00"
+        type: string
+      email:
+        example: user1@example.com
+        type: string
+      id:
+        example: 1
+        type: integer
+      role:
+        example: user
+        type: string
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+      updated_at:
+        example: "2024-11-09T18:00:00+09:00"
+        type: string
+    type: object
   main.Micropost:
     properties:
       created_at:
@@ -20,9 +44,10 @@ definitions:
         example: /avatars/default.png
         type: string
       email:
-        example: user@example.com
+        example: user1@example.com
         type: string
       id:
+        example: 1
         type: integer
       password:
         example: password123
@@ -34,6 +59,27 @@ definitions:
     required:
     - email
     - password
+    type: object
+  main.UserResponse:
+    properties:
+      avatar_path:
+        example: /avatars/default.png
+        type: string
+      created_at:
+        example: "2024-11-09T18:00:00+09:00"
+        type: string
+      email:
+        example: user1@example.com
+        type: string
+      id:
+        example: 1
+        type: integer
+      role:
+        example: user
+        type: string
+      updated_at:
+        example: "2024-11-09T18:00:00+09:00"
+        type: string
     type: object
 host: localhost:8080
 info:
@@ -60,7 +106,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/main.User'
+            $ref: '#/definitions/main.LoginResponse'
       summary: Login user
       tags:
       - auth
@@ -75,7 +121,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/main.User'
+            $ref: '#/definitions/main.UserResponse'
         "401":
           description: Unauthorized
           schema:
@@ -105,7 +151,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/main.User'
+            $ref: '#/definitions/main.UserResponse'
       summary: Signup user
       tags:
       - auth
@@ -190,7 +236,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/main.User'
+              $ref: '#/definitions/main.UserResponse'
             type: array
       security:
       - Bearer: []
@@ -214,7 +260,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/main.User'
+            $ref: '#/definitions/main.UserResponse'
         "404":
           description: Not Found
           schema:

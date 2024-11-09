@@ -43,7 +43,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/main.User"
+                            "$ref": "#/definitions/main.LoginResponse"
                         }
                     }
                 }
@@ -71,7 +71,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/main.User"
+                            "$ref": "#/definitions/main.UserResponse"
                         }
                     },
                     "401": {
@@ -114,7 +114,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/main.User"
+                            "$ref": "#/definitions/main.UserResponse"
                         }
                     }
                 }
@@ -253,7 +253,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/main.User"
+                                "$ref": "#/definitions/main.UserResponse"
                             }
                         }
                     }
@@ -291,7 +291,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/main.User"
+                            "$ref": "#/definitions/main.UserResponse"
                         }
                     },
                     "404": {
@@ -308,6 +308,39 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "main.LoginResponse": {
+            "type": "object",
+            "properties": {
+                "avatar_path": {
+                    "type": "string",
+                    "example": "/avatars/default.png"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-11-09T18:00:00+09:00"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "user1@example.com"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "role": {
+                    "type": "string",
+                    "example": "user"
+                },
+                "token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-11-09T18:00:00+09:00"
+                }
+            }
+        },
         "main.Micropost": {
             "type": "object",
             "required": [
@@ -342,10 +375,11 @@ const docTemplate = `{
                 },
                 "email": {
                     "type": "string",
-                    "example": "user@example.com"
+                    "example": "user1@example.com"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 1
                 },
                 "password": {
                     "type": "string",
@@ -355,6 +389,35 @@ const docTemplate = `{
                 "role": {
                     "type": "string",
                     "example": "user"
+                }
+            }
+        },
+        "main.UserResponse": {
+            "type": "object",
+            "properties": {
+                "avatar_path": {
+                    "type": "string",
+                    "example": "/avatars/default.png"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-11-09T18:00:00+09:00"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "user1@example.com"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "role": {
+                    "type": "string",
+                    "example": "user"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2024-11-09T18:00:00+09:00"
                 }
             }
         }
