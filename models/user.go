@@ -4,13 +4,14 @@ import "time"
 
 // User モデル定義
 type User struct {
-	ID         uint      `json:"id" gorm:"primaryKey" example:"1"`
-	Email      string    `json:"email" gorm:"uniqueIndex;not null" binding:"required,email" example:"user1@example.com"`
-	Password   string    `json:"password" gorm:"not null" binding:"required,min=6" example:"password123"`
-	Role       string    `json:"role" gorm:"default:'user'" example:"user"`
-	AvatarPath string    `json:"avatar_path" example:"/avatars/default.png"`
-	CreatedAt  time.Time `json:"-" gorm:"default:CURRENT_TIMESTAMP"`
-	UpdatedAt  time.Time `json:"-" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
+	ID         uint        `json:"id" gorm:"primaryKey" example:"1"`
+	Email      string      `json:"email" gorm:"uniqueIndex;not null" binding:"required,email" example:"user1@example.com"`
+	Password   string      `json:"password" gorm:"not null" binding:"required,min=6" example:"password123"`
+	Role       string      `json:"role" gorm:"default:'user'" example:"user"`
+	AvatarPath string      `json:"avatar_path" example:"/avatars/default.png"`
+	Microposts []Micropost `json:"microposts,omitempty" gorm:"foreignKey:UserID"`
+	CreatedAt  time.Time   `json:"-" gorm:"default:CURRENT_TIMESTAMP"`
+	UpdatedAt  time.Time   `json:"-" gorm:"default:CURRENT_TIMESTAMP;autoUpdateTime"`
 }
 
 // UserResponse は、パスワードを除外したユーザー情報のレスポンス構造体
