@@ -12,10 +12,6 @@ import (
 	"gorm.io/gorm"
 )
 
-func main() {
-	DeleteData()
-}
-
 func DeleteData() {
 	// データベース接続
 	dsn := "host=localhost user=postgres password=postgres dbname=web_app_db_integration_go port=5432 sslmode=disable"
