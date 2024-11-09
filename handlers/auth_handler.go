@@ -4,17 +4,22 @@ import (
 	"net/http"
 
 	"go-gin-gorm-minimum/models"
+	"go-gin-gorm-minimum/services"
 	"go-gin-gorm-minimum/utils"
 
 	"github.com/gin-gonic/gin"
 )
 
 type AuthHandler struct {
-	dbOps *DatabaseOperations
+	authService *services.AuthService
+	userService *services.UserService
 }
 
-func NewAuthHandler(dbOps *DatabaseOperations) *AuthHandler {
-	return &AuthHandler{dbOps: dbOps}
+func NewAuthHandler(authService *services.AuthService, userService *services.UserService) *AuthHandler {
+	return &AuthHandler{
+		authService: authService,
+		userService: userService,
+	}
 }
 
 // SignupUser godoc
@@ -33,19 +38,13 @@ func (h *AuthHandler) SignupUser(c *gin.Context) {
 		return
 	}
 
-	if _, err := h.dbOps.FindUserByEmail(user.Email); err == nil {
+	_, err := h.userService.FindByEmail(user.Email)
+	if err == nil {
 		c.JSON(http.StatusConflict, gin.H{"error": "Email already exists"})
 		return
 	}
 
-	hashedPassword, err := utils.HashPassword(user.Password)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
-		return
-	}
-	user.Password = hashedPassword
-
-	if err := h.dbOps.db.Create(&user).Error; err != nil {
+	if err := h.authService.SignUp(&user); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
 		return
 	}
@@ -69,27 +68,13 @@ func (h *AuthHandler) LoginUser(c *gin.Context) {
 		return
 	}
 
-	storedUser, err := h.dbOps.FindUserByEmail(loginReq.Email)
+	response, err := h.authService.Login(loginReq.Email, loginReq.Password)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, utils.ErrInvalidCredentials)
 		return
 	}
 
-	if err := utils.CheckPassword(storedUser.Password, loginReq.Password); err != nil {
-		c.JSON(http.StatusUnauthorized, utils.ErrInvalidCredentials)
-		return
-	}
-
-	tokenString, err := utils.GenerateJWTToken(*storedUser)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
-		return
-	}
-
-	c.JSON(http.StatusOK, models.LoginResponse{
-		Token:        tokenString,
-		UserResponse: storedUser.ToResponse(),
-	})
+	c.JSON(http.StatusOK, response)
 }
 
 // GetMe godoc
@@ -109,8 +94,8 @@ func (h *AuthHandler) GetMe(c *gin.Context) {
 		return
 	}
 
-	var user models.User
-	if err := h.dbOps.db.First(&user, userID).Error; err != nil {
+	user, err := h.authService.GetUserByID(userID)
+	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}

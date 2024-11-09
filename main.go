@@ -51,10 +51,12 @@ type Router struct {
 	micropost *handlers.MicropostHandler
 }
 
-func NewRouter(dbOps *handlers.DatabaseOperations) *Router {
+func NewRouter(db *gorm.DB) *Router {
 	userService := services.NewUserService(db)
+	authService := services.NewAuthService(db)
+
 	return &Router{
-		auth:      handlers.NewAuthHandler(dbOps),
+		auth:      handlers.NewAuthHandler(authService, userService),
 		user:      handlers.NewUserHandler(userService),
 		micropost: handlers.NewMicropostHandler(dbOps),
 	}
@@ -92,8 +94,7 @@ func (router *Router) setupAuthRoutes(group *gin.RouterGroup) {
 }
 
 func main() {
-	dbOps := handlers.NewDatabaseOperations(db)
-	router := NewRouter(dbOps)
+	router := NewRouter(db)
 
 	r := gin.Default()
 	router.Setup(r)
