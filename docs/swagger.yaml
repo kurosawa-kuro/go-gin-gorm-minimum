@@ -1,5 +1,18 @@
-basePath: /
+basePath: /api/v1
 definitions:
+  models.LoginRequest:
+    properties:
+      email:
+        example: user1@example.com
+        type: string
+      password:
+        example: password123
+        minLength: 6
+        type: string
+    required:
+    - email
+    - password
+    type: object
   models.LoginResponse:
     properties:
       avatar_path:
@@ -35,6 +48,8 @@ definitions:
         type: string
       updated_at:
         type: string
+      user_id:
+        type: integer
     required:
     - title
     type: object
@@ -49,6 +64,10 @@ definitions:
       id:
         example: 1
         type: integer
+      microposts:
+        items:
+          $ref: '#/definitions/models.Micropost'
+        type: array
       password:
         example: password123
         minLength: 6
@@ -84,22 +103,22 @@ definitions:
 host: localhost:8080
 info:
   contact: {}
-  description: This is a sample server.
-  title: API
+  description: A minimal Go REST API with Gin and GORM.
+  title: Go Gin GORM Minimum API
   version: "1.0"
 paths:
-  /api/v1/auth/login:
+  /auth/login:
     post:
       consumes:
       - application/json
       description: Login user with the given email and password
       parameters:
-      - description: User object
+      - description: Login credentials
         in: body
         name: user
         required: true
         schema:
-          $ref: '#/definitions/models.User'
+          $ref: '#/definitions/models.LoginRequest'
       produces:
       - application/json
       responses:
@@ -107,10 +126,12 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/models.LoginResponse'
+      security:
+      - BearerAuth: []
       summary: Login user
       tags:
       - auth
-  /api/v1/auth/me:
+  /auth/me:
     get:
       consumes:
       - application/json
@@ -129,11 +150,12 @@ paths:
               type: string
             type: object
       security:
-      - Bearer: []
+      - BearerAuth: []
+      - BearerAuth: []
       summary: Get current user
       tags:
       - auth
-  /api/v1/auth/signup:
+  /auth/signup:
     post:
       consumes:
       - application/json
@@ -155,7 +177,7 @@ paths:
       summary: Signup user
       tags:
       - auth
-  /api/v1/microposts:
+  /microposts:
     get:
       consumes:
       - application/json
@@ -170,7 +192,8 @@ paths:
               $ref: '#/definitions/models.Micropost'
             type: array
       security:
-      - Bearer: []
+      - BearerAuth: []
+      - BearerAuth: []
       summary: List microposts
       tags:
       - microposts
@@ -193,11 +216,12 @@ paths:
           schema:
             $ref: '#/definitions/models.Micropost'
       security:
-      - Bearer: []
+      - BearerAuth: []
+      - BearerAuth: []
       summary: Create new micropost
       tags:
       - microposts
-  /api/v1/microposts/{id}:
+  /microposts/{id}:
     get:
       consumes:
       - application/json
@@ -221,10 +245,13 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - BearerAuth: []
+      - BearerAuth: []
       summary: Get micropost by ID
       tags:
       - microposts
-  /api/v1/users:
+  /users:
     get:
       consumes:
       - application/json
@@ -239,11 +266,12 @@ paths:
               $ref: '#/definitions/models.UserResponse'
             type: array
       security:
-      - Bearer: []
+      - BearerAuth: []
+      - BearerAuth: []
       summary: List users
       tags:
       - users
-  /api/v1/users/{id}:
+  /users/{id}:
     get:
       consumes:
       - application/json
@@ -268,13 +296,14 @@ paths:
               type: string
             type: object
       security:
-      - Bearer: []
+      - BearerAuth: []
+      - BearerAuth: []
       summary: Get user by ID
       tags:
       - users
 securityDefinitions:
-  Bearer:
-    description: Type "Bearer" followed by a space and JWT token.
+  BearerAuth:
+    description: Bearer {token}
     in: header
     name: Authorization
     type: apiKey

@@ -15,8 +15,13 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/v1/auth/login": {
+        "/auth/login": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Login user with the given email and password",
                 "consumes": [
                     "application/json"
@@ -30,12 +35,12 @@ const docTemplate = `{
                 "summary": "Login user",
                 "parameters": [
                     {
-                        "description": "User object",
+                        "description": "Login credentials",
                         "name": "user",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.User"
+                            "$ref": "#/definitions/models.LoginRequest"
                         }
                     }
                 ],
@@ -49,11 +54,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/auth/me": {
+        "/auth/me": {
             "get": {
                 "security": [
                     {
-                        "Bearer": []
+                        "BearerAuth": []
+                    },
+                    {
+                        "BearerAuth": []
                     }
                 ],
                 "description": "get current user information from token",
@@ -86,7 +94,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/auth/signup": {
+        "/auth/signup": {
             "post": {
                 "description": "Signup user with the given information",
                 "consumes": [
@@ -120,11 +128,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/microposts": {
+        "/microposts": {
             "get": {
                 "security": [
                     {
-                        "Bearer": []
+                        "BearerAuth": []
+                    },
+                    {
+                        "BearerAuth": []
                     }
                 ],
                 "description": "get all microposts",
@@ -153,7 +164,10 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "Bearer": []
+                        "BearerAuth": []
+                    },
+                    {
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Create a new micropost with the given title",
@@ -188,8 +202,16 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/microposts/{id}": {
+        "/microposts/{id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "get micropost by ID",
                 "consumes": [
                     "application/json"
@@ -229,11 +251,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/users": {
+        "/users": {
             "get": {
                 "security": [
                     {
-                        "Bearer": []
+                        "BearerAuth": []
+                    },
+                    {
+                        "BearerAuth": []
                     }
                 ],
                 "description": "get all users",
@@ -260,11 +285,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/users/{id}": {
+        "/users/{id}": {
             "get": {
                 "security": [
                     {
-                        "Bearer": []
+                        "BearerAuth": []
+                    },
+                    {
+                        "BearerAuth": []
                     }
                 ],
                 "description": "get user by ID",
@@ -308,6 +336,24 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "models.LoginRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "user1@example.com"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 6,
+                    "example": "password123"
+                }
+            }
+        },
         "models.LoginResponse": {
             "type": "object",
             "properties": {
@@ -359,6 +405,9 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
                 }
             }
         },
@@ -380,6 +429,12 @@ const docTemplate = `{
                 "id": {
                     "type": "integer",
                     "example": 1
+                },
+                "microposts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Micropost"
+                    }
                 },
                 "password": {
                     "type": "string",
@@ -423,8 +478,8 @@ const docTemplate = `{
         }
     },
     "securityDefinitions": {
-        "Bearer": {
-            "description": "Type \"Bearer\" followed by a space and JWT token.",
+        "BearerAuth": {
+            "description": "Bearer {token}",
             "type": "apiKey",
             "name": "Authorization",
             "in": "header"
@@ -436,10 +491,10 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "localhost:8080",
-	BasePath:         "/",
+	BasePath:         "/api/v1",
 	Schemes:          []string{},
-	Title:            "API",
-	Description:      "This is a sample server.",
+	Title:            "Go Gin GORM Minimum API",
+	Description:      "A minimal Go REST API with Gin and GORM.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

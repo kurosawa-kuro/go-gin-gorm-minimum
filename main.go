@@ -1,3 +1,14 @@
+// @title           Go Gin GORM Minimum API
+// @version         1.0
+// @description     A minimal Go REST API with Gin and GORM.
+// @host      localhost:8080
+// @BasePath  /api/v1
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Bearer {token}
+
 package main
 
 import (
@@ -36,7 +47,7 @@ func init() {
 // @Produce      json
 // @Param        user body models.User true "User object" default({"email":"user1@example.com","password":"password123","role":"user","avatar_path":"/avatars/default.png"})
 // @Success      201  {object}  models.UserResponse
-// @Router       /api/v1/auth/signup [post]
+// @Router       /auth/signup [post]
 func SignupUser(c *gin.Context) {
 	var user models.User
 	if err := c.ShouldBindJSON(&user); err != nil {
@@ -70,23 +81,24 @@ func SignupUser(c *gin.Context) {
 // @Tags         auth
 // @Accept       json
 // @Produce      json
-// @Param        user body models.User true "User object" default({"email":"user1@example.com","password":"password123"})
+// @Param        user body models.LoginRequest true "Login credentials"
 // @Success      200  {object}  models.LoginResponse
-// @Router       /api/v1/auth/login [post]
+// @Router       /auth/login [post]
+// @Security BearerAuth
 func LoginUser(c *gin.Context) {
-	var loginUser models.User
-	if err := c.ShouldBindJSON(&loginUser); err != nil {
+	var loginReq models.LoginRequest
+	if err := c.ShouldBindJSON(&loginReq); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	storedUser, err := utils.FindUserByEmail(db, loginUser.Email)
+	storedUser, err := utils.FindUserByEmail(db, loginReq.Email)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, utils.ErrInvalidCredentials)
 		return
 	}
 
-	if err := utils.CheckPassword(storedUser.Password, loginUser.Password); err != nil {
+	if err := utils.CheckPassword(storedUser.Password, loginReq.Password); err != nil {
 		c.JSON(http.StatusUnauthorized, utils.ErrInvalidCredentials)
 		return
 	}
@@ -109,10 +121,11 @@ func LoginUser(c *gin.Context) {
 // @Tags         auth
 // @Accept       json
 // @Produce      json
-// @Security     Bearer
+// @Security     BearerAuth
 // @Success      200  {object}  models.UserResponse
 // @Failure      401  {object}  map[string]string
-// @Router       /api/v1/auth/me [get]
+// @Router       /auth/me [get]
+// @Security BearerAuth
 func GetMe(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 	if userID == nil {
@@ -135,9 +148,10 @@ func GetMe(c *gin.Context) {
 // @Tags         users
 // @Accept       json
 // @Produce      json
-// @Security     Bearer
+// @Security     BearerAuth
 // @Success      200  {array}   models.UserResponse
-// @Router       /api/v1/users [get]
+// @Router       /users [get]
+// @Security BearerAuth
 func GetUsers(c *gin.Context) {
 	var users []models.User
 	db.Find(&users)
@@ -156,11 +170,12 @@ func GetUsers(c *gin.Context) {
 // @Tags         users
 // @Accept       json
 // @Produce      json
-// @Security     Bearer
+// @Security     BearerAuth
 // @Param        id   path      int  true  "User ID"
 // @Success      200  {object}  models.UserResponse
 // @Failure      404  {object}  map[string]string
-// @Router       /api/v1/users/{id} [get]
+// @Router       /users/{id} [get]
+// @Security BearerAuth
 func GetUser(c *gin.Context) {
 	var user models.User
 	if err := db.First(&user, c.Param("id")).Error; err != nil {
@@ -177,10 +192,11 @@ func GetUser(c *gin.Context) {
 // @Tags         microposts
 // @Accept       json
 // @Produce      json
-// @Security     Bearer
+// @Security     BearerAuth
 // @Param        micropost body models.Micropost true "Micropost object"
 // @Success      201  {object}  models.Micropost
-// @Router       /api/v1/microposts [post]
+// @Router       /microposts [post]
+// @Security BearerAuth
 func CreateMicropost(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 	if userID == nil {
@@ -210,9 +226,10 @@ func CreateMicropost(c *gin.Context) {
 // @Tags         microposts
 // @Accept       json
 // @Produce      json
-// @Security     Bearer
+// @Security     BearerAuth
 // @Success      200  {array}   models.Micropost
-// @Router       /api/v1/microposts [get]
+// @Router       /microposts [get]
+// @Security BearerAuth
 func GetMicroposts(c *gin.Context) {
 	var microposts []models.Micropost
 	db.Preload("User").Find(&microposts)
@@ -225,10 +242,12 @@ func GetMicroposts(c *gin.Context) {
 // @Tags         microposts
 // @Accept       json
 // @Produce      json
+// @Security     BearerAuth
 // @Param        id   path      int  true  "Micropost ID"
 // @Success      200  {object}  models.Micropost
 // @Failure      404  {object}  map[string]string
-// @Router       /api/v1/microposts/{id} [get]
+// @Router       /microposts/{id} [get]
+// @Security BearerAuth
 func GetMicropost(c *gin.Context) {
 	var micropost models.Micropost
 	if err := db.First(&micropost, c.Param("id")).Error; err != nil {

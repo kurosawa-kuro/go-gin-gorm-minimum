@@ -41,3 +41,9 @@ func (u *User) ToResponse() UserResponse {
 		UpdatedAt:  u.UpdatedAt,
 	}
 }
+
+// LoginRequest はログインリクエスト用の構造体
+type LoginRequest struct {
+	Email    string `json:"email" binding:"required,email" example:"user1@example.com"`
+	Password string `json:"password" binding:"required,min=6" example:"password123"`
+}
