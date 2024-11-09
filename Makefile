@@ -12,7 +12,7 @@ run:
 
 .PHONY: docs
 docs:
-	swag init
+	swag init --parseDependency --parseInternal
 
 .PHONY: dev-with-docs
 dev-with-docs: docs dev 
