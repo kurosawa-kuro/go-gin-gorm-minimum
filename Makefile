@@ -8,4 +8,11 @@ build:
 
 .PHONY: run
 run:
-	./main 
+	./main
+
+.PHONY: docs
+docs:
+	swag init
+
+.PHONY: dev-with-docs
+dev-with-docs: docs dev 

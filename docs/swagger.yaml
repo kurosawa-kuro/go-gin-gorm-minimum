@@ -19,8 +19,6 @@ definitions:
       avatar_path:
         example: /avatars/default.png
         type: string
-      created_at:
-        type: string
       email:
         example: user@example.com
         type: string
@@ -32,8 +30,6 @@ definitions:
         type: string
       role:
         example: user
-        type: string
-      updated_at:
         type: string
     required:
     - email

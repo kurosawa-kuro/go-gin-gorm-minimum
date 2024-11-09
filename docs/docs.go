@@ -247,9 +247,6 @@ const docTemplate = `{
                     "type": "string",
                     "example": "/avatars/default.png"
                 },
-                "created_at": {
-                    "type": "string"
-                },
                 "email": {
                     "type": "string",
                     "example": "user@example.com"
@@ -265,9 +262,6 @@ const docTemplate = `{
                 "role": {
                     "type": "string",
                     "example": "user"
-                },
-                "updated_at": {
-                    "type": "string"
                 }
             }
         }
