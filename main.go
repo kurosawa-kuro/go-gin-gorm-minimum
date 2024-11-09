@@ -2,11 +2,13 @@ package main
 
 import (
 	"net/http"
+	"os"
 	"time"
 
 	_ "go-gin-gorm-minimum/docs"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"golang.org/x/crypto/bcrypt"
@@ -182,8 +184,22 @@ func LoginUser(c *gin.Context) {
 		return
 	}
 
+	// token関連
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"sub":   storedUser.ID,
+		"email": storedUser.Email,
+		"exp":   time.Now().Add(time.Hour).Unix(),
+	})
+
+	tokenString, err := token.SignedString([]byte(os.Getenv("SECRET_KEY")))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		return
+	}
+
 	// パスワードを除外したレスポンスを作成
 	response := struct {
+		Token      string    `json:"token"`
 		ID         uint      `json:"id"`
 		Email      string    `json:"email"`
 		Role       string    `json:"role"`
@@ -191,6 +207,7 @@ func LoginUser(c *gin.Context) {
 		CreatedAt  time.Time `json:"created_at"`
 		UpdatedAt  time.Time `json:"updated_at"`
 	}{
+		Token:      tokenString,
 		ID:         storedUser.ID,
 		Email:      storedUser.Email,
 		Role:       storedUser.Role,

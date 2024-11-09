@@ -16,3 +16,10 @@ docs:
 
 .PHONY: dev-with-docs
 dev-with-docs: docs dev 
+
+.PHONY: tidy
+tidy:
+	go mod tidy
+
+.PHONY: init
+init: tidy docs
