@@ -193,10 +193,9 @@ func GetUser(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        micropost body models.Micropost true "Micropost object"
-// @Success      201  {object}  models.Micropost
+// @Param        micropost body models.MicropostRequest true "Micropost object"
+// @Success      201  {object}  models.MicropostResponse
 // @Router       /microposts [post]
-// @Security BearerAuth
 func CreateMicropost(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 	if userID == nil {
@@ -204,20 +203,25 @@ func CreateMicropost(c *gin.Context) {
 		return
 	}
 
-	var micropost models.Micropost
-	if err := c.ShouldBindJSON(&micropost); err != nil {
+	var req models.MicropostRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Set the UserID from the authenticated user
-	micropost.UserID = userID.(uint)
+	micropost := models.Micropost{
+		Title:  req.Title,
+		UserID: userID.(uint),
+	}
 
 	if err := db.Create(&micropost).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create micropost"})
 		return
 	}
-	c.JSON(http.StatusCreated, micropost)
+
+	// Load the associated user for the response
+	db.Preload("User").First(&micropost, micropost.ID)
+	c.JSON(http.StatusCreated, micropost.ToResponse())
 }
 
 // GetMicroposts godoc

@@ -53,6 +53,29 @@ definitions:
     required:
     - title
     type: object
+  models.MicropostRequest:
+    properties:
+      title:
+        example: マイクロポストのタイトル
+        type: string
+    required:
+    - title
+    type: object
+  models.MicropostResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      title:
+        type: string
+      updated_at:
+        type: string
+      user:
+        $ref: '#/definitions/models.UserResponse'
+      user_id:
+        type: integer
+    type: object
   models.User:
     properties:
       avatar_path:
@@ -207,16 +230,15 @@ paths:
         name: micropost
         required: true
         schema:
-          $ref: '#/definitions/models.Micropost'
+          $ref: '#/definitions/models.MicropostRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/models.Micropost'
+            $ref: '#/definitions/models.MicropostResponse'
       security:
-      - BearerAuth: []
       - BearerAuth: []
       summary: Create new micropost
       tags:
