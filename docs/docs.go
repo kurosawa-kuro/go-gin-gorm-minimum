@@ -15,9 +15,9 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/": {
+        "/api/v1/microposts": {
             "get": {
-                "description": "get hello world message",
+                "description": "get all microposts",
                 "consumes": [
                     "application/json"
                 ],
@@ -25,14 +25,90 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "example"
+                    "microposts"
                 ],
-                "summary": "Hello world endpoint",
+                "summary": "List microposts",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/main.HelloResponse"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main.Micropost"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Create a new micropost with the given title",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "microposts"
+                ],
+                "summary": "Create new micropost",
+                "parameters": [
+                    {
+                        "description": "Micropost object",
+                        "name": "micropost",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main.Micropost"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/main.Micropost"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/microposts/{id}": {
+            "get": {
+                "description": "get micropost by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "microposts"
+                ],
+                "summary": "Get micropost by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Micropost ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/main.Micropost"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -40,12 +116,18 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "main.HelloResponse": {
+        "main.Micropost": {
             "type": "object",
+            "required": [
+                "title"
+            ],
             "properties": {
-                "message": {
+                "id": {
+                    "type": "integer"
+                },
+                "title": {
                     "type": "string",
-                    "example": "Hello, World!"
+                    "example": "マイクロポストのタイトル"
                 }
             }
         }
@@ -58,8 +140,8 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "localhost:8080",
 	BasePath:         "/",
 	Schemes:          []string{},
-	Title:            "Gin Swagger Example API",
-	Description:      "This is a sample server.",
+	Title:            "Micropost API",
+	Description:      "This is a micropost server.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

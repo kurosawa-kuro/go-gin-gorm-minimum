@@ -1,31 +1,85 @@
 basePath: /
 definitions:
-  main.HelloResponse:
+  main.Micropost:
     properties:
-      message:
-        example: Hello, World!
+      id:
+        type: integer
+      title:
+        example: マイクロポストのタイトル
         type: string
+    required:
+    - title
     type: object
 host: localhost:8080
 info:
   contact: {}
-  description: This is a sample server.
-  title: Gin Swagger Example API
+  description: This is a micropost server.
+  title: Micropost API
   version: "1.0"
 paths:
-  /:
+  /api/v1/microposts:
     get:
       consumes:
       - application/json
-      description: get hello world message
+      description: get all microposts
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/main.HelloResponse'
-      summary: Hello world endpoint
+            items:
+              $ref: '#/definitions/main.Micropost'
+            type: array
+      summary: List microposts
       tags:
-      - example
+      - microposts
+    post:
+      consumes:
+      - application/json
+      description: Create a new micropost with the given title
+      parameters:
+      - description: Micropost object
+        in: body
+        name: micropost
+        required: true
+        schema:
+          $ref: '#/definitions/main.Micropost'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/main.Micropost'
+      summary: Create new micropost
+      tags:
+      - microposts
+  /api/v1/microposts/{id}:
+    get:
+      consumes:
+      - application/json
+      description: get micropost by ID
+      parameters:
+      - description: Micropost ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.Micropost'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get micropost by ID
+      tags:
+      - microposts
 swagger: "2.0"
