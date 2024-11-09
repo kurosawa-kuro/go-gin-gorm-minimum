@@ -98,7 +98,6 @@ func CreateTestUser() (*models.User, string, error) {
 		return nil, "", err
 	}
 
-	// utils\jwt.goのGenerateJWTToken関数を使ってJWTトークンを生成
-	token, err := utils.GenerateJWTToken(*user) // utilsパッケージのGenerateJWTToken関数を呼び出す
+	token, err := utils.GenerateJWTToken(*user)
 	return user, token, err
 }
