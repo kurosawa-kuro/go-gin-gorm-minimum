@@ -110,16 +110,16 @@ func GetMicropost(c *gin.Context) {
 	c.JSON(http.StatusOK, micropost)
 }
 
-// CreateUser godoc
-// @Summary      Create new user
-// @Description  Create a new user with the given information
-// @Tags         users
+// SignupUser godoc
+// @Summary      Signup user
+// @Description  Signup user with the given information
+// @Tags         auth
 // @Accept       json
 // @Produce      json
 // @Param        user body User true "User object"
 // @Success      201  {object}  User
-// @Router       /api/v1/users [post]
-func CreateUser(c *gin.Context) {
+// @Router       /api/v1/auth/signup [post]
+func SignupUser(c *gin.Context) {
 	var user User
 	if err := c.ShouldBindJSON(&user); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -154,15 +154,15 @@ func CreateUser(c *gin.Context) {
 	c.JSON(http.StatusCreated, response)
 }
 
-// Login User
+// LoginUser godoc
 // @Summary      Login user
 // @Description  Login user with the given email and password
-// @Tags         users
+// @Tags         auth
 // @Accept       json
 // @Produce      json
 // @Param        user body User true "User object"
 // @Success      200  {object}  User
-// @Router       /api/v1/users/login [post]
+// @Router       /api/v1/auth/login [post]
 func LoginUser(c *gin.Context) {
 	var loginUser User
 	var storedUser User
@@ -271,10 +271,14 @@ func main() {
 
 		users := v1.Group("/users")
 		{
-			users.POST("", CreateUser)
-			users.POST("/login", LoginUser)
 			users.GET("", GetUsers)
 			users.GET("/:id", GetUser)
+		}
+
+		auth := v1.Group("/auth")
+		{
+			auth.POST("/signup", SignupUser)
+			auth.POST("/login", LoginUser)
 		}
 	}
 

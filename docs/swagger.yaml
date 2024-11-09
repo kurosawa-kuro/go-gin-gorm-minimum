@@ -42,6 +42,50 @@ info:
   title: API
   version: "1.0"
 paths:
+  /api/v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Login user with the given email and password
+      parameters:
+      - description: User object
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/main.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.User'
+      summary: Login user
+      tags:
+      - auth
+  /api/v1/auth/signup:
+    post:
+      consumes:
+      - application/json
+      description: Signup user with the given information
+      parameters:
+      - description: User object
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/main.User'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/main.User'
+      summary: Signup user
+      tags:
+      - auth
   /api/v1/microposts:
     get:
       consumes:
@@ -124,27 +168,6 @@ paths:
       summary: List users
       tags:
       - users
-    post:
-      consumes:
-      - application/json
-      description: Create a new user with the given information
-      parameters:
-      - description: User object
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/main.User'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/main.User'
-      summary: Create new user
-      tags:
-      - users
   /api/v1/users/{id}:
     get:
       consumes:
@@ -170,28 +193,6 @@ paths:
               type: string
             type: object
       summary: Get user by ID
-      tags:
-      - users
-  /api/v1/users/login:
-    post:
-      consumes:
-      - application/json
-      description: Login user with the given email and password
-      parameters:
-      - description: User object
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/main.User'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/main.User'
-      summary: Login user
       tags:
       - users
 swagger: "2.0"
