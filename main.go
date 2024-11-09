@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"time"
 
 	_ "go-gin-gorm-minimum/docs"
 
@@ -14,15 +15,28 @@ import (
 
 var db *gorm.DB
 
-// Micropost モデル定義
-type Micropost struct {
-	ID    uint   `json:"id" gorm:"primaryKey"`
-	Title string `json:"title" binding:"required" example:"マイクロポストのタイトル"`
+// User モデル定義
+type User struct {
+	ID         uint      `json:"id" gorm:"primaryKey"`
+	Email      string    `json:"email" gorm:"uniqueIndex;not null" binding:"required,email" example:"user@example.com"`
+	Password   string    `json:"password" gorm:"not null" binding:"required,min=6" example:"password123"`
+	Role       string    `json:"role" gorm:"default:'user'" example:"user"`
+	AvatarPath string    `json:"avatar_path" example:"/avatars/default.png"`
+	CreatedAt  time.Time `json:"-" gorm:"autoCreateTime"`
+	UpdatedAt  time.Time `json:"-" gorm:"autoUpdateTime"`
 }
 
-// @title           Micropost API
+// Micropost モデル定義
+type Micropost struct {
+	ID        uint      `json:"id" gorm:"primaryKey"`
+	Title     string    `json:"title" binding:"required" example:"マイクロポストのタイトル"`
+	CreatedAt time.Time `json:"created_at" gorm:"autoCreateTime"`
+	UpdatedAt time.Time `json:"updated_at" gorm:"autoUpdateTime"`
+}
+
+// @title           API
 // @version         1.0
-// @description     This is a micropost server.
+// @description     This is a sample server.
 // @host           localhost:8080
 // @BasePath       /
 
@@ -36,7 +50,7 @@ func init() {
 	}
 
 	// マイグレーション
-	db.AutoMigrate(&Micropost{})
+	db.AutoMigrate(&Micropost{}, &User{}) // User モデルを追加
 }
 
 // CreateMicropost godoc
@@ -93,6 +107,62 @@ func GetMicropost(c *gin.Context) {
 	c.JSON(http.StatusOK, micropost)
 }
 
+// CreateUser godoc
+// @Summary      Create new user
+// @Description  Create a new user with the given information
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Param        user body User true "User object"
+// @Success      201  {object}  User
+// @Router       /api/v1/users [post]
+func CreateUser(c *gin.Context) {
+	var user User
+	if err := c.ShouldBindJSON(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// TODO: パスワードのハッシュ化を実装する必要があります
+
+	db.Create(&user)
+	c.JSON(http.StatusCreated, user)
+}
+
+// GetUsers godoc
+// @Summary      List users
+// @Description  get all users
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Success      200  {array}   User
+// @Router       /api/v1/users [get]
+func GetUsers(c *gin.Context) {
+	var users []User
+	db.Find(&users)
+	c.JSON(http.StatusOK, users)
+}
+
+// GetUser godoc
+// @Summary      Get user by ID
+// @Description  get user by ID
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Param        id   path      int  true  "User ID"
+// @Success      200  {object}  User
+// @Failure      404  {object}  map[string]string
+// @Router       /api/v1/users/{id} [get]
+func GetUser(c *gin.Context) {
+	var user User
+	if err := db.First(&user, c.Param("id")).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Record not found!"})
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
+}
+
 func main() {
 	r := gin.Default()
 
@@ -107,6 +177,13 @@ func main() {
 			microposts.POST("", CreateMicropost)
 			microposts.GET("", GetMicroposts)
 			microposts.GET("/:id", GetMicropost)
+		}
+
+		users := v1.Group("/users")
+		{
+			users.POST("", CreateUser)
+			users.GET("", GetUsers)
+			users.GET("/:id", GetUser)
 		}
 	}
 
