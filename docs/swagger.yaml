@@ -321,6 +321,35 @@ paths:
       summary: Get user by ID
       tags:
       - users
+  /users/avatar:
+    put:
+      consumes:
+      - multipart/form-data
+      description: Upload and update user avatar image
+      parameters:
+      - description: Avatar image file
+        in: formData
+        name: avatar
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update user avatar
+      tags:
+      - users
 securityDefinitions:
   BearerAuth:
     description: Bearer {token}

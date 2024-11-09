@@ -13,6 +13,8 @@ package main
 
 import (
 	"net/http"
+	"os"
+	"path/filepath"
 
 	_ "go-gin-gorm-minimum/docs"
 
@@ -186,6 +188,77 @@ func GetUser(c *gin.Context) {
 	c.JSON(http.StatusOK, user.ToResponse())
 }
 
+// UpdateAvatar godoc
+// @Summary      Update user avatar
+// @Description  Upload and update user avatar image
+// @Tags         users
+// @Accept       multipart/form-data
+// @Produce      json
+// @Security     BearerAuth
+// @Param        avatar formData file true "Avatar image file"
+// @Success      200  {object}  models.UserResponse
+// @Failure      400  {object}  map[string]string
+// @Router       /users/avatar [put]
+func UpdateAvatar(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	if userID == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	file, err := c.FormFile("avatar")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "No file uploaded"})
+		return
+	}
+
+	// 画像ファイルの検証
+	if !utils.IsValidImageFile(file) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file type. Only images are allowed"})
+		return
+	}
+
+	// ファイル名を生成（user_id_timestamp.ext）
+	filename := utils.GenerateAvatarFilename(userID.(uint), file.Filename)
+
+	// 保存先のパスを生成
+	avatarPath := filepath.Join("uploads/avatars", filename)
+	fullPath := filepath.Join(".", avatarPath)
+
+	// ディレクトリが存在することを確認
+	if err := os.MkdirAll(filepath.Dir(fullPath), 0755); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create directory"})
+		return
+	}
+
+	// ファイルを保存
+	if err := c.SaveUploadedFile(file, fullPath); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
+		return
+	}
+
+	// ユーザー情報を更新
+	var user models.User
+	if err := db.First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	// 古いアバター画像を削除（デフォルト画像以外の場合）
+	if user.AvatarPath != "/avatars/default.png" {
+		oldPath := filepath.Join(".", user.AvatarPath)
+		os.Remove(oldPath)
+	}
+
+	user.AvatarPath = "/" + avatarPath
+	if err := db.Save(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user"})
+		return
+	}
+
+	c.JSON(http.StatusOK, user.ToResponse())
+}
+
 // CreateMicropost godoc
 // @Summary      Create new micropost
 // @Description  Create a new micropost with the given title
@@ -291,6 +364,7 @@ func setupUserRoutes(group *gin.RouterGroup) {
 	group.Use(middlewares.AuthMiddleware())
 	group.GET("", GetUsers)
 	group.GET("/:id", GetUser)
+	group.PUT("/avatar", UpdateAvatar)
 }
 
 func setupAuthRoutes(group *gin.RouterGroup) {
