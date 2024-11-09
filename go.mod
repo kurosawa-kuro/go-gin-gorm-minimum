@@ -13,6 +13,8 @@ require (
 	gorm.io/gorm v1.25.12
 )
 
+require github.com/mattn/go-sqlite3 v1.14.22 // indirect
+
 require (
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/bytedance/sonic v1.12.4 // indirect
@@ -54,4 +56,5 @@ require (
 	golang.org/x/tools v0.27.0 // indirect
 	google.golang.org/protobuf v1.35.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	gorm.io/driver/sqlite v1.5.6
 )

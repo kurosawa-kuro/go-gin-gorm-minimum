@@ -13,6 +13,7 @@ package main
 import (
 	_ "go-gin-gorm-minimum/docs"
 	"go-gin-gorm-minimum/handlers"
+	"go-gin-gorm-minimum/infra"
 	"go-gin-gorm-minimum/middlewares"
 	"go-gin-gorm-minimum/models"
 	"go-gin-gorm-minimum/services"
@@ -87,6 +88,7 @@ func (router *Router) setupAuthRoutes(group *gin.RouterGroup) {
 }
 
 func main() {
+	db := infra.SetupDB()
 	router := NewRouter(db)
 
 	r := gin.Default()
