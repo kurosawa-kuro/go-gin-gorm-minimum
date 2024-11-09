@@ -54,11 +54,12 @@ type Router struct {
 func NewRouter(db *gorm.DB) *Router {
 	userService := services.NewUserService(db)
 	authService := services.NewAuthService(db)
+	micropostService := services.NewMicropostService(db)
 
 	return &Router{
 		auth:      handlers.NewAuthHandler(authService, userService),
 		user:      handlers.NewUserHandler(userService),
-		micropost: handlers.NewMicropostHandler(dbOps),
+		micropost: handlers.NewMicropostHandler(micropostService),
 	}
 }
 

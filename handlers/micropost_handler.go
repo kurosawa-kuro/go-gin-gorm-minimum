@@ -4,16 +4,17 @@ import (
 	"net/http"
 
 	"go-gin-gorm-minimum/models"
+	"go-gin-gorm-minimum/services"
 
 	"github.com/gin-gonic/gin"
 )
 
 type MicropostHandler struct {
-	dbOps *DatabaseOperations
+	micropostService *services.MicropostService
 }
 
-func NewMicropostHandler(dbOps *DatabaseOperations) *MicropostHandler {
-	return &MicropostHandler{dbOps: dbOps}
+func NewMicropostHandler(micropostService *services.MicropostService) *MicropostHandler {
+	return &MicropostHandler{micropostService: micropostService}
 }
 
 // CreateMicropost godoc
@@ -44,12 +45,11 @@ func (h *MicropostHandler) CreateMicropost(c *gin.Context) {
 		UserID: userID.(uint),
 	}
 
-	if err := h.dbOps.db.Create(&micropost).Error; err != nil {
+	if err := h.micropostService.Create(&micropost); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create micropost"})
 		return
 	}
 
-	h.dbOps.db.Preload("User").First(&micropost, micropost.ID)
 	c.JSON(http.StatusCreated, micropost.ToResponse())
 }
 
@@ -63,8 +63,11 @@ func (h *MicropostHandler) CreateMicropost(c *gin.Context) {
 // @Success      200  {array}   models.Micropost
 // @Router       /microposts [get]
 func (h *MicropostHandler) GetMicroposts(c *gin.Context) {
-	var microposts []models.Micropost
-	h.dbOps.db.Preload("User").Find(&microposts)
+	microposts, err := h.micropostService.GetAll()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch microposts"})
+		return
+	}
 	c.JSON(http.StatusOK, microposts)
 }
 
@@ -80,8 +83,8 @@ func (h *MicropostHandler) GetMicroposts(c *gin.Context) {
 // @Failure      404  {object}  map[string]string
 // @Router       /microposts/{id} [get]
 func (h *MicropostHandler) GetMicropost(c *gin.Context) {
-	var micropost models.Micropost
-	if err := h.dbOps.db.First(&micropost, c.Param("id")).Error; err != nil {
+	micropost, err := h.micropostService.GetByID(c.Param("id"))
+	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Record not found!"})
 		return
 	}
